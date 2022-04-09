@@ -51,5 +51,15 @@
     "parsegraph-checkglerror": "^1.5.3",
     "parsegraph-log": "^1.7.3",
     "webgl-debug": "^2.0.1"
+  },
+  "dependencies": {
+    "parsegraph-artist": "^3.1.0",
+    "parsegraph-block": "^4.2.0",
+    "parsegraph-camera": "^1.4.11",
+    "parsegraph-direction": "^2.0.10",
+    "parsegraph-projector": "^1.10.0",
+    "parsegraph-showincamera": "^1.6.9",
+    "parsegraph-timing": "^1.4.16",
+    "parsegraph-timingbelt": "^1.7.11"
   }
 }
