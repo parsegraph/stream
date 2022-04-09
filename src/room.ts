@@ -36,7 +36,7 @@ const buildGraph = () => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  const root = document.getElementById("demo");
+  const root = document.getElementById("room");
   root.style.position = "relative";
 
   const proj = new BasicProjector();
