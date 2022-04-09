@@ -5,8 +5,8 @@ import { BasicProjector } from "parsegraph-projector";
 import TimingBelt from "parsegraph-timingbelt";
 import Camera from "parsegraph-camera";
 import { showInCamera } from "parsegraph-showincamera";
-import Block, {DefaultBlockPalette} from "parsegraph-block";
-import getRoomName from './index';
+import Block, { DefaultBlockPalette } from "parsegraph-block";
+import getRoomName from "./index";
 
 const palette = new DefaultBlockPalette();
 
