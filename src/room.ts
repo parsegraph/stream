@@ -7,8 +7,24 @@ import Camera from "parsegraph-camera";
 import { showInCamera } from "parsegraph-showincamera";
 import Block, { DefaultBlockPalette } from "parsegraph-block";
 import getRoomName from "./index";
+//import World from "parsegraph-world";
 
 const palette = new DefaultBlockPalette();
+
+const makeRoom = (root: HTMLElement) => {
+  //const window = new GraphicsWindow();
+  //const world = new World();
+  //root.appendChild(window.container());
+  const belt = new TimingBelt();
+  //belt.addRenderable(window);
+  //addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+  //const viewport = new Viewport(window, world);
+  //window.addComponent(viewport.component());
+
+  //const room = new Room(belt, world, getRoomName());
+  //world.plot(room.node());
+  //viewport.showInCamera(room.node());
+};
 
 const buildGraph = () => {
   const car = new DirectionCaret<Block>("u", palette);
