@@ -2,6 +2,8 @@ const glob = require("glob");
 const express = require("express");
 const app = express();
 const { readFileSync, statSync } = require("fs");
+const process = require("process");
+const path = require("path");
 
 const { DIST_NAME } = require("../webpack.common");
 
@@ -61,33 +63,11 @@ async function getDemos() {
 }
 
 app.get(root, async (req, res) => {
-  resp = "";
-  const write = (text) => {
-    resp += text + "\n";
-  };
+  res.sendFile(path.resolve(process.cwd() + "/../www/index.html"));
+});
 
-  write(`<!DOCTYPE html>`);
-  write(`<html>`);
-  write(`<head>`);
-  write(`<title>${DIST_NAME}</title>`);
-  write(`</head>`);
-  write(`<body>`);
-  write(
-    `<h1>${DIST_NAME} <a href='${root}/coverage/lcov-report/'>Coverage</a> <a href='${root}/docs'>Docs</a></h1>`
-  );
-  write(
-    `<p>This library is available as a <a href="${root}/src/index.js">JavaScript UMD module</a></p>`
-  );
-  write(`<h2>Samples &amp; Demos</h2>`);
-  write(`<ul>`);
-  (await getDemos()).forEach((demo) => {
-    demo && write(`<li><a href='${root}/${demo}.html'>${demo}</li>`);
-  });
-  write(`</ul>`);
-  write(`</body>`);
-  write(`</html>`);
-
-  res.end(resp);
+app.get(root + "/@:worldEnv", async (req, res) => {
+  res.sendFile(path.resolve(process.cwd() + "/../www/index.html"));
 });
 
 app.use(root, express.static("../src"));
