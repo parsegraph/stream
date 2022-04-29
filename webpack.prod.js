@@ -2,7 +2,7 @@ const {webpackConfig, relDir} = require("./webpack.common");
 
 module.exports = {
   entry: {
-    index: relDir("src/room.ts"),
+    index: relDir("src/index.ts"),
   },
   ...webpackConfig(true),
 };
