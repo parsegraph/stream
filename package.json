@@ -57,6 +57,7 @@
     "parsegraph-block": "^4.2.0",
     "parsegraph-camera": "^1.4.11",
     "parsegraph-direction": "^2.0.10",
+    "parsegraph-method": "^1.4.22",
     "parsegraph-projector": "^1.10.0",
     "parsegraph-showincamera": "^1.6.9",
     "parsegraph-timing": "^1.4.16",
