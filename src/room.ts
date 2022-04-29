@@ -6,49 +6,28 @@ import TimingBelt from "parsegraph-timingbelt";
 import Camera from "parsegraph-camera";
 import { showInCamera } from "parsegraph-showincamera";
 import Block, { DefaultBlockPalette } from "parsegraph-block";
-import getRoomName from "./index";
-//import World from "parsegraph-world";
+import Room, {getRoomName} from "./index";
+// import World from "parsegraph-world";
 
 const palette = new DefaultBlockPalette();
 
 const makeRoom = (root: HTMLElement) => {
-  //const window = new GraphicsWindow();
-  //const world = new World();
-  //root.appendChild(window.container());
+  // const window = new GraphicsWindow();
+  // const world = new World();
+  // root.appendChild(window.container());
   const belt = new TimingBelt();
-  //belt.addRenderable(window);
-  //addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
-  //const viewport = new Viewport(window, world);
-  //window.addComponent(viewport.component());
+  // belt.addRenderable(window);
+  // addEventMethod(top.window, "resize", belt.scheduleUpdate, belt);
+  // const viewport = new Viewport(window, world);
+  // window.addComponent(viewport.component());
 
-  //const room = new Room(belt, world, getRoomName());
-  //world.plot(room.node());
-  //viewport.showInCamera(room.node());
+  // world.plot(room.node());
+  // viewport.showInCamera(room.node());
 };
 
 const buildGraph = () => {
-  const car = new DirectionCaret<Block>("u", palette);
-
-  const root = car.root();
-
-  const dirs = [
-    Direction.FORWARD,
-    Direction.DOWNWARD,
-    Direction.INWARD,
-    Direction.UPWARD,
-    Direction.BACKWARD,
-  ];
-  for (let i = 0; i < 20; ++i) {
-    let dir = Direction.NULL;
-    while (dir === Direction.NULL || car.has(dir)) {
-      dir = dirs[Math.floor(Math.random() * dirs.length)];
-    }
-    car.spawn(dir, "b");
-    car.node().value().setLabel(getRoomName());
-    car.pull(dir);
-    car.move(dir);
-  }
-  return root;
+  const room = new Room(getRoomName());
+  return room.node();
 };
 
 document.addEventListener("DOMContentLoaded", () => {
