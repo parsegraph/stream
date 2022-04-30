@@ -33,6 +33,7 @@ export default class Room {
   _update: Method;
 
   constructor(roomId: string) {
+    console.log("Room", roomId);
     this._root = new DefaultBlockPalette().spawn();
 
     if (roomId) {
