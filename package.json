@@ -61,6 +61,7 @@
     "parsegraph-scene": "^2.2.23",
     "parsegraph-showincamera": "^1.7.4",
     "parsegraph-timing": "^1.4.16",
-    "parsegraph-timingbelt": "^1.7.11"
+    "parsegraph-timingbelt": "^1.7.11",
+    "parsegraph-viewport": "^2.1.8"
   }
 }
