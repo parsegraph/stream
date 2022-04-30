@@ -1,12 +1,13 @@
 import Direction from "parsegraph-direction";
-import { Pizza, WorldTransform } from "parsegraph-artist";
+import { Pizza } from "parsegraph-artist";
+import { WorldTransform } from "parsegraph-scene";
 import { DirectionCaret } from "parsegraph-direction";
 import { BasicProjector } from "parsegraph-projector";
 import TimingBelt from "parsegraph-timingbelt";
 import Camera from "parsegraph-camera";
 import { showInCamera } from "parsegraph-showincamera";
 import Block, { DefaultBlockPalette } from "parsegraph-block";
-import Room, {getRoomName} from "./index";
+import Room, { getRoomName } from "./index";
 // import World from "parsegraph-world";
 
 const palette = new DefaultBlockPalette();
