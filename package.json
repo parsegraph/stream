@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "parsegraph-block": "^4.4.15",
+    "parsegraph-color": "^1.4.7",
     "parsegraph-direction": "^2.1.0",
     "parsegraph-method": "^1.4.22",
     "parsegraph-timing": "^1.4.16",
