@@ -52,16 +52,10 @@
     "parsegraph-log": "^1.7.3"
   },
   "dependencies": {
-    "parsegraph-artist": "^3.4.22",
     "parsegraph-block": "^4.4.15",
-    "parsegraph-camera": "^1.4.18",
     "parsegraph-direction": "^2.1.0",
     "parsegraph-method": "^1.4.22",
-    "parsegraph-projector": "^1.14.0",
-    "parsegraph-scene": "^2.2.23",
-    "parsegraph-showincamera": "^1.7.4",
     "parsegraph-timing": "^1.4.16",
-    "parsegraph-timingbelt": "^1.7.11",
     "parsegraph-viewport": "^2.1.8"
   }
 }
