@@ -2,8 +2,19 @@ import { BlockCaret, BlockNode, DefaultBlockPalette } from "parsegraph-block";
 import Direction from "parsegraph-direction";
 import { elapsed } from "parsegraph-timing";
 import Method from "parsegraph-method";
+import Carousel from 'parsegraph-carousel';
 
 const START_TIME = new Date();
+
+export type ListId = string | number;
+
+export interface ListType {
+  spawnItem(room:Room, value:any, children:any[], id:ListId):any;
+}
+
+export interface ListItem {
+
+}
 
 export function getRoomName() {
   const atSymbol = document.URL.lastIndexOf("/@");
@@ -22,16 +33,18 @@ export default class Room {
   _eventSource: EventSource;
   _root: BlockNode;
   _itemListeners: any;
-  _items: any;
+  _items: Map<ListId, ListItem>;
   _ids: any;
   _actions: any[];
   _firedActions: any;
   _username: string;
   _sessionId: string;
   _update: Method;
-  _listClasses: Map<string, any>;
+  _listClasses: Map<string, ListType>;
+  _carousel: Carousel;
 
-  constructor(roomId: string) {
+  constructor(carousel: Carousel, roomId: string) {
+    this._carousel = carousel;
     this._root = new DefaultBlockPalette().spawn();
     this._listClasses = new Map();
 
@@ -56,7 +69,7 @@ export default class Room {
     }
 
     this._itemListeners = {};
-    this._items = {};
+    this._items = new Map();
     if (window.WeakMap) {
       this._ids = new WeakMap();
     } else {
@@ -106,6 +119,10 @@ export default class Room {
     };*/
 
     this._username = null;
+  }
+
+  carousel() {
+    return this._carousel;
   }
 
   node() {
@@ -236,12 +253,12 @@ export default class Room {
     return this._listClasses.get(type);
   }
 
-  spawnItem(id: string | number, type: string, value: any, items: any[]) {
+  spawnItem(id: ListId, type: string, value: any, items: any[]) {
     const klass = this.getLoader(type);
     if (!klass) {
       throw new Error("Block type not recognized: " + type);
     }
-    if (id in this._items) {
+    if (this._items.has(id)) {
       throw new Error("Item was already spawned:" + id);
     }
     return this.register(
@@ -258,34 +275,35 @@ export default class Room {
       }
       return null;
     }
-    for (const id in this._items) {
-      if (this._items[id] === item) {
-        return id;
+    let foundId = null;
+    this._items.forEach((val:ListItem, key:ListId)=>{
+      if (item === val) {
+        foundId = key;
       }
-    }
-    return null;
+    });
+    return foundId;
   }
 
-  register(item: any, id: string | number) {
-    if (id in this._items) {
-      if (this._items[id] !== item) {
+  register(item: any, id: ListId) {
+    if (this._items.has(id)) {
+      if (this._items.get(id) !== item) {
         throw new Error("Refusing to overwrite item " + id + " with " + item);
       }
       return item;
     }
-    this._items[id] = item;
+    this._items.set(id, item);
     if (this._ids) {
       this._ids.set(item, id);
     }
     return item;
   }
 
-  unregister(id: string | number) {
-    if (!(id in this._items)) {
+  unregister(id: ListId) {
+    if (!this._items.has(id)) {
       return null;
     }
-    const item = this._items[id];
-    delete this._items[id];
+    const item = this._items.get(id);
+    this._items.delete(id);
     delete this._itemListeners[id];
     if (this._ids) {
       this._ids.delete(item);
@@ -293,7 +311,7 @@ export default class Room {
     return item;
   }
 
-  onItemEvent(id: string | number, event: any) {
+  onItemEvent(id: ListId, event: any) {
     const listeners = this._itemListeners[id];
     if (listeners) {
       // console.log("Listeners for item: " + id);
@@ -306,7 +324,7 @@ export default class Room {
     }
   }
 
-  listen(id: string | number, listener: Function, listenerThisArg?: object) {
+  listen(id: ListId, listener: Function, listenerThisArg?: object) {
     // console.log("Listening for " + id);
     if (!this._itemListeners[id]) {
       this._itemListeners[id] = [];
@@ -315,7 +333,7 @@ export default class Room {
   }
 
   pushListItem(
-    id: string | number,
+    id: ListId,
     type: string,
     value: any,
     cb?: Function,
@@ -333,7 +351,7 @@ export default class Room {
     );
   }
 
-  destroyListItem(id: string | number, cb?: Function, cbThisArg?: object) {
+  destroyListItem(id: ListId, cb?: Function, cbThisArg?: object) {
     this.request(
       {
         command: "destroyListItem",
@@ -345,7 +363,7 @@ export default class Room {
   }
 
   editListItem(
-    id: string | number,
+    id: ListId,
     value: any,
     cb?: Function,
     cbThisArg?: object

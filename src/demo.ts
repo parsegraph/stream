@@ -1,17 +1,14 @@
-import { renderFullscreen } from "parsegraph-viewport";
-import Color from "parsegraph-color";
-
+import Navport, { render } from "parsegraph-viewport";
 import Room, { getRoomName } from "./index";
-
-const buildGraph = () => {
-  console.log("Building graph");
-  const room = new Room(getRoomName());
-  return room.node();
-};
+import {MultislotType} from "./Multislot";
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Started");
   const topElem = document.getElementById("room");
   topElem.style.position = "relative";
-  renderFullscreen(topElem, buildGraph(), new Color(0, 0, 0, 1));
+
+  const viewport = new Navport();
+  const room = new Room(viewport.carousel(), getRoomName());
+  room.addLoader("multislot", new MultislotType());
+  viewport.setRoot(room.node());
+  render(topElem, viewport);
 });
