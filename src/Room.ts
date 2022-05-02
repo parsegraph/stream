@@ -3,8 +3,6 @@ import Direction from "parsegraph-direction";
 import { elapsed } from "parsegraph-timing";
 import Method from "parsegraph-method";
 
-import listClasses from "./listClasses";
-
 const START_TIME = new Date();
 
 export function getRoomName() {
@@ -31,10 +29,11 @@ export default class Room {
   _username: string;
   _sessionId: string;
   _update: Method;
+  _listClasses: Map<string, any>;
 
   constructor(roomId: string) {
-    console.log("Room", roomId);
     this._root = new DefaultBlockPalette().spawn();
+    this._listClasses = new Map();
 
     if (roomId) {
       this._roomId = roomId;
@@ -229,8 +228,16 @@ export default class Room {
     return this._sessionId;
   }
 
+  addLoader(type: string, klass: any) {
+    this._listClasses.set(type, klass);
+  }
+
+  getLoader(type: string) {
+    return this._listClasses.get(type);
+  }
+
   spawnItem(id: string | number, type: string, value: any, items: any[]) {
-    const klass = listClasses[type];
+    const klass = this.getLoader(type);
     if (!klass) {
       throw new Error("Block type not recognized: " + type);
     }
@@ -290,10 +297,7 @@ export default class Room {
     const listeners = this._itemListeners[id];
     if (listeners) {
       // console.log("Listeners for item: " + id);
-      for (const i in listeners) {
-        const cb = listeners[i];
-        cb[0].call(cb[1], event);
-      }
+      listeners.forEach((cb:any)=>{cb[0].call(cb[1], event)});
       if (event.event === "destroyListItem") {
         this.unregister(id);
       }
