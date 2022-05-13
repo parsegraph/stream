@@ -5,6 +5,7 @@ SCRIPT_FILES = \
 	src/Multislot.ts \
 	src/MultislotPlot.ts \
 	src/Room.ts \
+	src/RoomRegistry.ts \
 	src/demo.ts \
 	src/index.ts \
 	test/test.ts

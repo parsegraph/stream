@@ -1,6 +1,6 @@
 import Navport, { render } from "parsegraph-viewport";
 import Room, { getRoomName } from "./index";
-import {MultislotType} from "./Multislot";
+import { MultislotType } from "./Multislot";
 
 document.addEventListener("DOMContentLoaded", () => {
   const topElem = document.getElementById("room");

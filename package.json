@@ -57,6 +57,6 @@
     "parsegraph-direction": "^2.1.0",
     "parsegraph-method": "^1.4.22",
     "parsegraph-timing": "^1.4.16",
-    "parsegraph-viewport": "^2.1.9"
+    "parsegraph-viewport": "^2.1.11"
   }
 }

@@ -2,19 +2,18 @@ import { BlockCaret, BlockNode, DefaultBlockPalette } from "parsegraph-block";
 import Direction from "parsegraph-direction";
 import { elapsed } from "parsegraph-timing";
 import Method from "parsegraph-method";
-import Carousel from 'parsegraph-carousel';
+import Carousel from "parsegraph-carousel";
+import RoomRegistry from "./RoomRegistry";
 
 const START_TIME = new Date();
 
 export type ListId = string | number;
 
 export interface ListType {
-  spawnItem(room:Room, value:any, children:any[], id:ListId):any;
+  spawnItem(room: Room, value: any, children: any[], id: ListId): any;
 }
 
-export interface ListItem {
-
-}
+export interface ListItem {}
 
 export function getRoomName() {
   const atSymbol = document.URL.lastIndexOf("/@");
@@ -32,9 +31,6 @@ export default class Room {
   _roomId: string;
   _eventSource: EventSource;
   _root: BlockNode;
-  _itemListeners: any;
-  _items: Map<ListId, ListItem>;
-  _ids: any;
   _actions: any[];
   _firedActions: any;
   _username: string;
@@ -43,7 +39,10 @@ export default class Room {
   _listClasses: Map<string, ListType>;
   _carousel: Carousel;
 
+  _registry: RoomRegistry<ListId, any>;
+
   constructor(carousel: Carousel, roomId: string) {
+    this._registry = new RoomRegistry();
     this._carousel = carousel;
     this._root = new DefaultBlockPalette().spawn();
     this._listClasses = new Map();
@@ -68,13 +67,6 @@ export default class Room {
       this._root.value().setLabel(roomId);
     }
 
-    this._itemListeners = {};
-    this._items = new Map();
-    if (window.WeakMap) {
-      this._ids = new WeakMap();
-    } else {
-      this._ids = null;
-    }
     this._actions = [];
     this._firedActions = 0;
 
@@ -225,11 +217,11 @@ export default class Room {
           var cb = this._graph.cameraBox();
           cb.setCameraMouse(obj.username, obj.x, obj.y);
       }*/
-      this.onItemEvent(obj.item_id, obj);
+      this.registry().dispatch(obj.item_id, obj);
     } else if (obj.event == "pushListItem") {
-      this.onItemEvent(obj.list_id, obj);
+      this.registry().dispatch(obj.list_id, obj);
     } else if (obj.event == "destroyListItem") {
-      this.onItemEvent(obj.item_id, obj);
+      this.registry().dispatch(obj.item_id, obj);
     } else if (obj.event == "prepopulate") {
       window.location.replace(window.location.href);
     } else {
@@ -253,83 +245,22 @@ export default class Room {
     return this._listClasses.get(type);
   }
 
+  registry() {
+    return this._registry;
+  }
+
   spawnItem(id: ListId, type: string, value: any, items: any[]) {
     const klass = this.getLoader(type);
     if (!klass) {
       throw new Error("Block type not recognized: " + type);
     }
-    if (this._items.has(id)) {
+    if (this.registry().has(id)) {
       throw new Error("Item was already spawned:" + id);
     }
-    return this.register(
+    return this.registry().add(
       klass.spawnItem.call(klass, this, value, items, id),
       id
     );
-  }
-
-  getId(item: any) {
-    if (this._ids) {
-      const val = this._ids.get(item);
-      if (val) {
-        return val;
-      }
-      return null;
-    }
-    let foundId = null;
-    this._items.forEach((val:ListItem, key:ListId)=>{
-      if (item === val) {
-        foundId = key;
-      }
-    });
-    return foundId;
-  }
-
-  register(item: any, id: ListId) {
-    if (this._items.has(id)) {
-      if (this._items.get(id) !== item) {
-        throw new Error("Refusing to overwrite item " + id + " with " + item);
-      }
-      return item;
-    }
-    this._items.set(id, item);
-    if (this._ids) {
-      this._ids.set(item, id);
-    }
-    return item;
-  }
-
-  unregister(id: ListId) {
-    if (!this._items.has(id)) {
-      return null;
-    }
-    const item = this._items.get(id);
-    this._items.delete(id);
-    delete this._itemListeners[id];
-    if (this._ids) {
-      this._ids.delete(item);
-    }
-    return item;
-  }
-
-  onItemEvent(id: ListId, event: any) {
-    const listeners = this._itemListeners[id];
-    if (listeners) {
-      // console.log("Listeners for item: " + id);
-      listeners.forEach((cb:any)=>{cb[0].call(cb[1], event)});
-      if (event.event === "destroyListItem") {
-        this.unregister(id);
-      }
-    } else {
-      // console.log("No listeners for item: " + id);
-    }
-  }
-
-  listen(id: ListId, listener: Function, listenerThisArg?: object) {
-    // console.log("Listening for " + id);
-    if (!this._itemListeners[id]) {
-      this._itemListeners[id] = [];
-    }
-    this._itemListeners[id].push([listener, listenerThisArg]);
   }
 
   pushListItem(
@@ -362,12 +293,7 @@ export default class Room {
     );
   }
 
-  editListItem(
-    id: ListId,
-    value: any,
-    cb?: Function,
-    cbThisArg?: object
-  ) {
+  editListItem(id: ListId, value: any, cb?: Function, cbThisArg?: object) {
     this.request(
       {
         command: "editItem",
@@ -407,8 +333,6 @@ export default class Room {
     }
     this.request({ command: "prepopulate" }, cb, cbThisArg);
   }
-
-  close() {}
 
   request(reqBody: any, cb?: Function, cbThisArg?: object) {
     if (!this.roomId()) {
