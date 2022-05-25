@@ -31,5 +31,5 @@ jobs:
     - run: git push --tags
     - uses: actions/upload-artifact@v2
       with:
-        name: parsegraph-room-dev-${{ github.run_number }}-${{ matrix.node-version }}
-        path: parsegraph-room-dev.tgz
+        name: parsegraph-stream-dev-${{ github.run_number }}-${{ matrix.node-version }}
+        path: parsegraph-stream-dev.tgz

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PUBLISH="npm pub parsegraph-room-prod.tgz"
+PUBLISH="npm pub parsegraph-stream-prod.tgz"
 $PUBLISH && exit
 for try in `seq 1 3`; do
     sleep $try
