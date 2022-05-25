@@ -1,14 +1,13 @@
 import Navport, { render } from "parsegraph-viewport";
-import Room, { getRoomName } from "./index";
-import { MultislotType } from "./Multislot";
+import ParsegraphStream from "./ParsegraphStream";
 
 document.addEventListener("DOMContentLoaded", () => {
   const topElem = document.getElementById("room");
   topElem.style.position = "relative";
-
   const viewport = new Navport();
-  const room = new Room(viewport.carousel(), getRoomName());
-  room.addLoader("multislot", new MultislotType());
-  viewport.setRoot(room.node());
+  const stream = new ParsegraphStream(
+    viewport,
+    "http://fritolaptop.aaronfaanes:14536/events"
+  );
   render(topElem, viewport);
 });

@@ -1,4 +1,4 @@
-DIST_NAME = room
+DIST_NAME = stream
 
 SCRIPT_FILES = \
 	src/ListType.ts \
