@@ -1,11 +1,7 @@
 DIST_NAME = stream
 
 SCRIPT_FILES = \
-	src/ListType.ts \
-	src/Multislot.ts \
-	src/MultislotPlot.ts \
-	src/Room.ts \
-	src/RoomRegistry.ts \
+	src/ParsegraphStream.ts \
 	src/demo.ts \
 	src/index.ts \
 	test/test.ts
