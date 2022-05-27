@@ -19,12 +19,17 @@ export default class ParsegraphStream {
   _artists: Map<number, BlockArtist>;
   _palette: BlockPalette;
 
-  constructor(viewport: Navport, url: string) {
-    this._palette = new DefaultBlockPalette();
+  constructor(
+    viewport: Navport,
+    url: string,
+    palette: BlockPalette = new DefaultBlockPalette()
+  ) {
+    this._palette = palette;
     this._carets = new Map();
     this._nodes = new Map();
     this._blocks = new Map();
     this._styles = new Map();
+    this._artists = new Map();
     const es = new EventSource(url);
     es.onmessage = (event) => {
       const args = JSON.parse(event.data);
@@ -35,7 +40,7 @@ export default class ParsegraphStream {
   }
 
   event(command: string, ...args: any[]) {
-    console.log(command);
+    console.log("ParsegraphStream event", command);
     const runner = (ParsegraphStream.prototype as any)[command];
     if (!runner) {
       throw new Error("Unknown command: " + command);
@@ -52,6 +57,9 @@ export default class ParsegraphStream {
   }
 
   getNode(nodeId: number) {
+    if (!nodeId) {
+      return null;
+    }
     if (!this.hasNode(nodeId)) {
       throw new Error("No node for ID");
     }
@@ -98,4 +106,6 @@ export default class ParsegraphStream {
   }
 
   connectNode(blockId: number, fit: string) {}
+
+  setLabel() {}
 }

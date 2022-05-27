@@ -15,6 +15,11 @@ const Axis = {
   Z: "Z",
 };
 
+const PreferredAxis = {
+  PERPENDICULAR: "PERPENDICULAR",
+  PARENT: "PARENT",
+};
+
 const getDirectionAxis = (dir) => {
   switch (dir) {
     case "f":
@@ -27,11 +32,6 @@ const getDirectionAxis = (dir) => {
     case "o":
       return Axis.Z;
   }
-};
-
-const PreferredAxis = {
-  PERPENDICULAR: "PERPENDICULAR",
-  PARENT: "PARENT",
 };
 
 const readDirection = (dir) => {
@@ -398,7 +398,7 @@ class ParsegraphCaret {
     // Spawn a node in the given direction.
     const created = this.doSpawn(newType);
     this.node().connectNode(inDirection, created);
-    created.setLayoutPreference("PERPENDICULAR");
+    created.setLayoutPreference(PreferredAxis.PERPENDICULAR);
     created.setNodeFit(this.node().nodeFit());
 
     // Use the given alignment mode.
@@ -419,6 +419,29 @@ class ParsegraphCaret {
     }
     this.node().value().setLabel(text);
   }
+
+  replace(...args) {
+    // Retrieve the arguments.
+    let node = this.node();
+    let withType;
+    if (args.length > 1) {
+      node = node.nodeAt(readDirection(args[0]));
+      withType = args[1];
+    } else {
+      withType = args[0];
+    }
+    this.doReplace(node, withType);
+  }
+
+  doReplace(node, given) {
+    if (this.palette()) {
+      this.palette().replace(node, given);
+      return;
+    }
+    node.setValue(
+      given ? given.value() : given
+    );
+  }
 }
 
 class ParsegraphBlockStyle {
@@ -438,6 +461,7 @@ class ParsegraphBlock {
     this._style = style;
     this._artist = artist;
     this._text = "";
+    this.server().send("newBlock", this.id(), this._node?.id(), style?.id(), artist?.id());
   }
 
   artist() {
@@ -462,6 +486,7 @@ class ParsegraphBlock {
 
   setLabel(text) {
     this._text = text;
+    this.server().send("setLabel", this.id(), text);
   }
 }
 

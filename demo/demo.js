@@ -63,7 +63,7 @@ async function getDemos() {
 }
 
 app.get(root, async (req, res) => {
-  res.sendFile(path.resolve(process.cwd() + "/../www/index.html"));
+  res.sendFile(path.resolve(process.cwd() + "/../www/demo.html"));
 });
 
 const server = require("./script");
