@@ -67,6 +67,11 @@ app.get(root, async (req, res) => {
 });
 
 const server = require("./script");
+const bodyParser = require('body-parser')
+
+app.post("/testroute", bodyParser.json(), (req, resp) => {
+  console.log("Test route", req.body.path);
+});
 
 app.get("/events", (req, resp) => {
   resp.writeHead(200, {

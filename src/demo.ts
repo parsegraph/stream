@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewport = new Navport();
   const stream = new ParsegraphStream(
     viewport,
-    "http://fritolaptop.aaronfaanes:15557/events"
+    "http://localhost:15557/events"
   );
   render(topElem, viewport);
 });

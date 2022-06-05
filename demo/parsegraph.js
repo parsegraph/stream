@@ -3,16 +3,51 @@ const id = () => {
   return ++nextId;
 };
 
+const BUD_RADIUS = 2;
+
+const MIN_BLOCK_HEIGHT = BUD_RADIUS * 12;
+const MIN_BLOCK_WIDTH = BUD_RADIUS * 15;
+
+// Inter-node spacing
+const HORIZONTAL_SEPARATION_PADDING = 7 * BUD_RADIUS;
+const VERTICAL_SEPARATION_PADDING = 3 * BUD_RADIUS;
+
+// Configures graphs to appear grid-like; I call it 'math-mode'.
+const MIN_BLOCK_WIDTH_MATH = BUD_RADIUS * 40;
+const MIN_BLOCK_HEIGHT_MATH = MIN_BLOCK_WIDTH_MATH;
+const HORIZONTAL_SEPARATION_PADDING_MATH = 2;
+const VERTICAL_SEPARATION_PADDING_MATH = 2;
+
+const FONT_SIZE = 18;
+
+const LINE_COLOR = "rgba(0.4, 0.4, 0.4, 0.6)";
+const SELECTED_LINE_COLOR = "rgba(0.8, 0.8, 0.8, 1)";
+const LINE_THICKNESS = (12 * BUD_RADIUS) / 8;
+
+const lineColor = LINE_COLOR;
+const selectedLineColor = lineColor;
+const borderColor = lineColor;
+const selectedBorderColor = lineColor;
+
+const Direction = {
+  FORWARD: "f",
+  BACKWARD: "b",
+  DOWNWARD: "d",
+  UPWARD: "u",
+  INWARD: "i",
+  OUTWARD: "o"
+}
+
+const Axis = {
+  VERTICAL:"VERTICAL",
+  HORIZONTAL:"HORIZONTAL",
+  Z:"Z"
+}
+
 const Fit = {
   EXACT: "EXACT",
   LOOSE: "LOOSE",
   NAIVE: "NAIVE",
-};
-
-const Axis = {
-  VERTICAL: "VERTICAL",
-  HORIZONTAL: "HORIZONTAL",
-  Z: "Z",
 };
 
 const PreferredAxis = {
@@ -20,22 +55,8 @@ const PreferredAxis = {
   PARENT: "PARENT",
 };
 
-const getDirectionAxis = (dir) => {
-  switch (dir) {
-    case "f":
-    case "b":
-      return Axis.HORIZONTAL;
-    case "d":
-    case "u":
-      return Axis.VERTICAL;
-    case "i":
-    case "o":
-      return Axis.Z;
-  }
-};
-
 const readDirection = (dir) => {
-  return dir;
+  return dir.toLowerCase().substring(0, 1);
 };
 
 const reverseDirection = (dir) => {
@@ -52,6 +73,42 @@ const reverseDirection = (dir) => {
       return "o";
     case "o":
       return "i";
+  }
+};
+
+const getDirectionAxis = (given)=>{
+  switch (given) {
+    case Direction.FORWARD:
+    case Direction.BACKWARD:
+      return Axis.HORIZONTAL;
+    case Direction.DOWNWARD:
+    case Direction.UPWARD:
+      return Axis.VERTICAL;
+    case Direction.INWARD:
+    case Direction.OUTWARD:
+      return Axis.Z;
+    case Direction.NULL:
+      return Axis.NULL;
+  }
+}
+
+const isVerticalDirection = (dir)=>{
+  switch (dir) {
+    case "d":
+    case "u":
+      return true;
+    default:
+      return false;
+  }
+};
+
+const isHorizontalDirection = (dir)=>{
+  switch (dir) {
+    case "d":
+    case "u":
+      return true;
+    default:
+      return false;
   }
 };
 
@@ -95,6 +152,8 @@ class ParsegraphNode {
 
   setValue(value) {
     this._value = value;
+    value?.assignNode(this);
+    this.server().send("setValue", this.id(), value?.id());
   }
 
   connectNode(inDirection, node) {
@@ -206,18 +265,12 @@ class ParsegraphNode {
         given !== PreferredAxis.VERTICAL &&
         given !== PreferredAxis.HORIZONTAL
       ) {
-        throw createException(BAD_LAYOUT_PREFERENCE);
+        throw new Error("Bad layout preference");
       }
       if (this.getLayoutPreference() === given) {
         return;
       }
-      if (given === PreferredAxis.VERTICAL) {
-        // PREFER_HORIZONTAL_AXIS -> PREFER_VERTICAL_AXIS
-        this.siblings().horzToVert();
-      } else {
-        // PREFER_VERTICAL_AXIS -> PREFER_HORIZONTAL_AXIS
-        this.siblings().vertToHorz();
-      }
+      this.server().send("setLayoutPreference", this.id(), given);
       this._layoutPreference = given;
       return;
     }
@@ -226,27 +279,11 @@ class ParsegraphNode {
 
     const curCanon = this.canonicalLayoutPreference();
     this._layoutPreference = given;
+    this.server().send("setLayoutPreference", this.id(), given);
     const newCanon = this.canonicalLayoutPreference();
     if (curCanon === newCanon) {
       return;
     }
-
-    const paxis = getDirectionAxis(this.parentDirection());
-    if (curCanon === PreferredAxis.PARENT) {
-      if (paxis === Axis.HORIZONTAL) {
-        this.siblings().horzToVert();
-      } else {
-        this.siblings().vertToHorz();
-      }
-    } else {
-      if (paxis === Axis.VERTICAL) {
-        this.siblings().vertToHorz();
-      } else {
-        this.siblings().horzToVert();
-      }
-    }
-
-    this.layoutChanged(Direction.INWARD);
   }
 
   nodeFit() {
@@ -271,6 +308,24 @@ class ParsegraphNode {
 
   value() {
     return this._value;
+  }
+
+  pull(given) {
+    if (this.isRoot() || this.parentDirection() === Direction.OUTWARD) {
+      if (isVerticalDirection(given)) {
+        this.setLayoutPreference(PreferredAxis.VERTICAL);
+      } else {
+        this.setLayoutPreference(PreferredAxis.HORIZONTAL);
+      }
+      return;
+    }
+    if (getDirectionAxis(given) === getDirectionAxis(this.parentDirection())) {
+      // console.log(namePreferredAxis(PreferredAxis.PARENT));
+      this.setLayoutPreference(PreferredAxis.PARENT);
+    } else {
+      // console.log(namePreferredAxis(PreferredAxis.PERPENDICULAR);
+      this.setLayoutPreference(PreferredAxis.PERPENDICULAR);
+    }
   }
 }
 
@@ -303,6 +358,30 @@ class ParsegraphCaret {
     this._nodeRoot = this.doSpawn(given);
     this._nodes = [this._nodeRoot];
     this.server().send("newCaret", this.id(), this.node().id());
+  }
+
+  act(path, data) {
+    this.server().send("act", this.node().id(), path, data);
+  }
+
+  push() {
+    this._nodes.push(this.node());
+  }
+
+  pop() {
+    if (this._nodes.length <= 1) {
+      throw new Error("No node found");
+    }
+    this._nodes.pop();
+  }
+
+  pull(given) {
+    given = readDirection(given);
+    this.node().pull(given);
+  }
+
+  root() {
+    return this._nodeRoot;
   }
 
   id() {
@@ -438,9 +517,7 @@ class ParsegraphCaret {
       this.palette().replace(node, given);
       return;
     }
-    node.setValue(
-      given ? given.value() : given
-    );
+    node.setValue(given ? given.value() : given);
   }
 }
 
@@ -449,7 +526,11 @@ class ParsegraphBlockStyle {
     this._server = server;
     this._id = id();
     this._style = initialStyle;
-    this.server().send("newBlockStyle", this.id(), this._style);
+    this._server.send("newBlockStyle", this._id, this._style);
+  }
+
+  id() {
+    return this._id;
   }
 }
 
@@ -461,7 +542,13 @@ class ParsegraphBlock {
     this._style = style;
     this._artist = artist;
     this._text = "";
-    this.server().send("newBlock", this.id(), this._node?.id(), style?.id(), artist?.id());
+    this.server().send(
+      "newBlock",
+      this.id(),
+      this._node?.id(),
+      style?.id(),
+      artist?.id()
+    );
   }
 
   artist() {
@@ -480,6 +567,10 @@ class ParsegraphBlock {
     return this._node;
   }
 
+  assignNode(node) {
+    this._node = node;
+  }
+
   server() {
     return this._server;
   }
@@ -491,22 +582,119 @@ class ParsegraphBlock {
 }
 
 class ParsegraphServerState {
-  constructor(server) {
+  constructor(server, artist) {
     this._server = server;
     this._carets = {};
+    this._mathMode = false;
+    this._artist = artist;
     this._palette = new ParsegraphPalette(server, (given) => {
-      switch (given) {
-        case "u":
-          return new ParsegraphBlock(server);
-        case "b":
-          return new ParsegraphBlock(server);
-        case "s":
-          return new ParsegraphBlock(server);
-        default:
-          console.log("Palette default", given);
-          return given;
-      }
+      return new ParsegraphBlock(server, null, this.style(given, this.mathMode()), this.artist());
     });
+  }
+
+  style(given, mathMode) {
+    switch(given) {
+    case "u":
+      return this.budStyle();
+    case "s":
+      return mathMode ? this.slotMathStyle() : this.slotStyle();
+    case "b":
+      return mathMode ? this.blockMathStyle() : this.blockStyle();
+    }
+  }
+
+  slotStyle() {
+    if (!this._slotStyle) {
+      this._slotStyle = new ParsegraphBlockStyle(this.server(), {
+        bud: false,
+        mathMode: false,
+        minWidth: MIN_BLOCK_WIDTH,
+        minHeight: MIN_BLOCK_HEIGHT,
+        horizontalPadding: 3 * BUD_RADIUS,
+        verticalPadding: 0.5 * BUD_RADIUS,
+        borderColor: borderColor,
+        backgroundColor: 'rgba(0.75, 0.75, 1, 0.5)',
+        selectedBorderColor: selectedBorderColor,
+        selectedBackgroundColor: 'rgba(0.9, 1, 0.9, 1)',
+        brightness: 0.75,
+        borderRoundness: BUD_RADIUS * 3,
+        borderThickness: BUD_RADIUS * 2,
+        fontColor: 'rgba(0, 0, 0, 1)',
+        selectedFontColor: 'rgba(0, 0, 0, 1)',
+        fontSize: FONT_SIZE,
+        letterWidth: 0.61,
+        verticalSeparation: 6 * VERTICAL_SEPARATION_PADDING,
+        horizontalSeparation: 7 * HORIZONTAL_SEPARATION_PADDING,
+        lineColor: lineColor,
+        selectedLineColor: selectedLineColor
+      });
+    }
+    return this._slotStyle;
+  }
+
+  blockStyle() {
+    if (!this._blockStyle) {
+      this._blockStyle = new ParsegraphBlockStyle(this.server(), {
+        bud: false,
+        mathMode: false,
+        minWidth: MIN_BLOCK_WIDTH,
+        minHeight: MIN_BLOCK_HEIGHT,
+        horizontalPadding: 3 * BUD_RADIUS,
+        verticalPadding: 0.5 * BUD_RADIUS,
+        borderColor: borderColor,
+        backgroundColor: 'rgba(1, 1, 1, 0.25)',
+        selectedBorderColor: selectedBorderColor,
+        selectedBackgroundColor: 'rgba(0.75, 0.75, 1, 1)',
+        brightness: 0.75,
+        borderRoundness: BUD_RADIUS * 3,
+        borderThickness: BUD_RADIUS * 2,
+        fontColor: 'rgba(0, 0, 0, 1)',
+        selectedFontColor: 'rgba(0, 0, 0, 1)',
+        fontSize: FONT_SIZE,
+        letterWidth: 0.61,
+        lineColor: lineColor,
+        selectedLineColor: selectedLineColor,
+        verticalSeparation: 6 * VERTICAL_SEPARATION_PADDING,
+        horizontalSeparation: 1 * HORIZONTAL_SEPARATION_PADDING,
+      });
+    }
+    return this._blockStyle;
+  }
+
+  budStyle() {
+    if (!this._budStyle) {
+      this._budStyle = new ParsegraphBlockStyle(this.server(), {
+        bud: true,
+        minWidth: BUD_RADIUS * 3,
+        minHeight: BUD_RADIUS * 3,
+        horizontalPadding: BUD_RADIUS / 2,
+        verticalPadding: BUD_RADIUS / 2,
+        borderColor: borderColor,
+        backgroundColor: "rgba(0.9, 0.9, 0.9, 0.2)",
+        selectedBorderColor: selectedBorderColor,
+        selectedBackgroundColor: "rgba(1, 1, 0.7, 1)",
+        brightness: 1.5,
+        borderRoundness: BUD_RADIUS * 8,
+        borderThickness: BUD_RADIUS * 2,
+        fontColor: "rgba(0, 0, 0, 1)",
+        selectedFontColor: "rgba(0, 0, 0, 1)",
+        fontSize: FONT_SIZE,
+        letterWidth: 0.61,
+        verticalSeparation: 10 * VERTICAL_SEPARATION_PADDING,
+        horizontalSeparation: 7 * HORIZONTAL_SEPARATION_PADDING,
+        lineColor: lineColor,
+        selectedLineColor: selectedLineColor
+      });
+    }
+    return this._budStyle;
+  }
+
+  mathMode() {
+    return this._mathMode;
+  }
+
+  artist() {
+    return this._artist;
   }
 
   server() {
@@ -525,13 +713,22 @@ class ParsegraphServerState {
   palette() {
     return this._palette;
   }
+
+  setRoot(root) {
+    this._root = root;
+    this.server().send("setRoot", root?.id());
+  }
+
+  root() {
+    return this._root;
+  }
 }
 
 class ParsegraphServer {
-  constructor() {
+  constructor(artist) {
     this._clients = [];
     this._messages = [];
-    this._state = new ParsegraphServerState(this);
+    this._state = new ParsegraphServerState(this, artist);
   }
 
   connect(writer) {
