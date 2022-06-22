@@ -35,14 +35,14 @@ const Direction = {
   DOWNWARD: "d",
   UPWARD: "u",
   INWARD: "i",
-  OUTWARD: "o"
-}
+  OUTWARD: "o",
+};
 
 const Axis = {
-  VERTICAL:"VERTICAL",
-  HORIZONTAL:"HORIZONTAL",
-  Z:"Z"
-}
+  VERTICAL: "VERTICAL",
+  HORIZONTAL: "HORIZONTAL",
+  Z: "Z",
+};
 
 const Fit = {
   EXACT: "EXACT",
@@ -76,7 +76,7 @@ const reverseDirection = (dir) => {
   }
 };
 
-const getDirectionAxis = (given)=>{
+const getDirectionAxis = (given) => {
   switch (given) {
     case Direction.FORWARD:
     case Direction.BACKWARD:
@@ -90,9 +90,9 @@ const getDirectionAxis = (given)=>{
     case Direction.NULL:
       return Axis.NULL;
   }
-}
+};
 
-const isVerticalDirection = (dir)=>{
+const isVerticalDirection = (dir) => {
   switch (dir) {
     case "d":
     case "u":
@@ -102,7 +102,7 @@ const isVerticalDirection = (dir)=>{
   }
 };
 
-const isHorizontalDirection = (dir)=>{
+const isHorizontalDirection = (dir) => {
   switch (dir) {
     case "d":
     case "u":
@@ -157,7 +157,7 @@ class ParsegraphNode {
   }
 
   connectNode(inDirection, node) {
-    if (this.hasNode(inDirection)) {
+    if (this.hasNode(inDirection) || this.hasInclude(inDirection)) {
       this.disconnectNode(inDirection);
     }
     if (!node.isRoot()) {
@@ -177,12 +177,63 @@ class ParsegraphNode {
     return node;
   }
 
+  disconnectNode(inDirection) {
+    if (arguments.length === 0) {
+      if (this.isRoot()) {
+        return this;
+      }
+      return this.parentNode().disconnectNode(
+        reverseDirection(this.parentDirection())
+      );
+    }
+    if (!this.hasNode(inDirection)) {
+      return;
+    }
+    if (!this.isRoot() && this.parentDirection() === inDirection) {
+      return this.parentNode().disconnectNode(
+        reverseDirection(this.parentDirection())
+      );
+    }
+    // Disconnect the node.
+    // console.log("Disconnecting ", disconnected.id(), " from ", this.id());
+    const neighbor = this.neighborAt(inDirection);
+    const disconnected = neighbor.node;
+
+    neighbor.node = null;
+    neighbor.url = null;
+    if (disconnected) {
+      disconnected.assignParent(null);
+    }
+
+    if (disconnected.getLayoutPreference() === PreferredAxis.PARENT) {
+      if (Axis.VERTICAL === getDirectionAxis(inDirection)) {
+        disconnected.setLayoutPreference(PreferredAxis.VERTICAL);
+      } else {
+        disconnected.setLayoutPreference(PreferredAxis.HORIZONTAL);
+      }
+    } else if (
+      disconnected.getLayoutPreference() === PreferredAxis.PERPENDICULAR
+    ) {
+      if (Axis.VERTICAL === getDirectionAxis(inDirection)) {
+        disconnected.setLayoutPreference(PreferredAxis.HORIZONTAL);
+      } else {
+        disconnected.setLayoutPreference(PreferredAxis.VERTICAL);
+      }
+    }
+
+    return disconnected;
+  }
+
   isRoot() {
     return !this._parentNeighbor;
   }
 
   neighborAt(dir) {
     return this._neighbors[dir];
+  }
+
+  hasInclude(atDirection) {
+    return !!(this.neighborAt(atDirection) && this.neighborAt(atDirection).url);
   }
 
   hasNode(atDirection) {
@@ -303,6 +354,9 @@ class ParsegraphNode {
       }
       return null;
     }
+    if (n.url) {
+      throw new Error("Node in direction is embedded");
+    }
     return n.node;
   }
 
@@ -326,6 +380,15 @@ class ParsegraphNode {
       // console.log(namePreferredAxis(PreferredAxis.PERPENDICULAR);
       this.setLayoutPreference(PreferredAxis.PERPENDICULAR);
     }
+  }
+
+  include(dir, url) {
+    const n = this.ensureNeighbor(dir);
+    if (n.node) {
+      this.disconnectNode(dir);
+    }
+    n.url = {url:url};
+    this.server().send("include", this.id(), dir, url);
   }
 }
 
@@ -360,8 +423,8 @@ class ParsegraphCaret {
     this.server().send("newCaret", this.id(), this.node().id());
   }
 
-  act(path, data) {
-    this.server().send("act", this.node().id(), path, data);
+  action(path, data) {
+    this.server().send("action", this.node().id(), path, data);
   }
 
   push() {
@@ -499,6 +562,10 @@ class ParsegraphCaret {
     this.node().value().setLabel(text);
   }
 
+  link(url) {
+    this.server().send("link", this.node().id(), url);
+  }
+
   replace(...args) {
     // Retrieve the arguments.
     let node = this.node();
@@ -519,6 +586,15 @@ class ParsegraphCaret {
     }
     node.setValue(given ? given.value() : given);
   }
+
+  include(dir, url) {
+    const node = this.node();
+    node.include(readDirection(dir), url);
+  }
+
+  crease() {
+    this.server().send("crease", this.node().id());
+  }
 }
 
 class ParsegraphBlockStyle {
@@ -527,6 +603,15 @@ class ParsegraphBlockStyle {
     this._id = id();
     this._style = initialStyle;
     this._server.send("newBlockStyle", this._id, this._style);
+  }
+
+  value() {
+    return this._style;
+  }
+
+  setValue(newStyle) {
+    this._style = newStyle;
+    this._server.send("setStyleValue", this._id, this._style);
   }
 
   id() {
@@ -579,6 +664,11 @@ class ParsegraphBlock {
     this._text = text;
     this.server().send("setLabel", this.id(), text);
   }
+
+  setBlockStyle(style) {
+    this._style = style;
+    this.server().send("setBlockStyle", this.id(), this._style?.id());
+  }
 }
 
 class ParsegraphServerState {
@@ -588,18 +678,23 @@ class ParsegraphServerState {
     this._mathMode = false;
     this._artist = artist;
     this._palette = new ParsegraphPalette(server, (given) => {
-      return new ParsegraphBlock(server, null, this.style(given, this.mathMode()), this.artist());
+      return new ParsegraphBlock(
+        server,
+        null,
+        this.style(given, this.mathMode()),
+        this.artist()
+      );
     });
   }
 
   style(given, mathMode) {
-    switch(given) {
-    case "u":
-      return this.budStyle();
-    case "s":
-      return mathMode ? this.slotMathStyle() : this.slotStyle();
-    case "b":
-      return mathMode ? this.blockMathStyle() : this.blockStyle();
+    switch (given) {
+      case "u":
+        return this.budStyle();
+      case "s":
+        return mathMode ? this.slotMathStyle() : this.slotStyle();
+      case "b":
+        return mathMode ? this.blockMathStyle() : this.blockStyle();
     }
   }
 
@@ -613,20 +708,20 @@ class ParsegraphServerState {
         horizontalPadding: 3 * BUD_RADIUS,
         verticalPadding: 0.5 * BUD_RADIUS,
         borderColor: borderColor,
-        backgroundColor: 'rgba(0.75, 0.75, 1, 0.5)',
+        backgroundColor: "rgba(0.75, 0.75, 1, 0.5)",
         selectedBorderColor: selectedBorderColor,
-        selectedBackgroundColor: 'rgba(0.9, 1, 0.9, 1)',
+        selectedBackgroundColor: "rgba(0.9, 1, 0.9, 1)",
         brightness: 0.75,
         borderRoundness: BUD_RADIUS * 3,
         borderThickness: BUD_RADIUS * 2,
-        fontColor: 'rgba(0, 0, 0, 1)',
-        selectedFontColor: 'rgba(0, 0, 0, 1)',
+        fontColor: "rgba(0, 0, 0, 1)",
+        selectedFontColor: "rgba(0, 0, 0, 1)",
         fontSize: FONT_SIZE,
         letterWidth: 0.61,
         verticalSeparation: 6 * VERTICAL_SEPARATION_PADDING,
         horizontalSeparation: 7 * HORIZONTAL_SEPARATION_PADDING,
         lineColor: lineColor,
-        selectedLineColor: selectedLineColor
+        selectedLineColor: selectedLineColor,
       });
     }
     return this._slotStyle;
@@ -642,14 +737,14 @@ class ParsegraphServerState {
         horizontalPadding: 3 * BUD_RADIUS,
         verticalPadding: 0.5 * BUD_RADIUS,
         borderColor: borderColor,
-        backgroundColor: 'rgba(1, 1, 1, 0.25)',
+        backgroundColor: "rgba(1, 1, 1, 0.25)",
         selectedBorderColor: selectedBorderColor,
-        selectedBackgroundColor: 'rgba(0.75, 0.75, 1, 1)',
+        selectedBackgroundColor: "rgba(0.75, 0.75, 1, 1)",
         brightness: 0.75,
         borderRoundness: BUD_RADIUS * 3,
         borderThickness: BUD_RADIUS * 2,
-        fontColor: 'rgba(0, 0, 0, 1)',
-        selectedFontColor: 'rgba(0, 0, 0, 1)',
+        fontColor: "rgba(0, 0, 0, 1)",
+        selectedFontColor: "rgba(0, 0, 0, 1)",
         fontSize: FONT_SIZE,
         letterWidth: 0.61,
         lineColor: lineColor,
@@ -659,6 +754,13 @@ class ParsegraphServerState {
       });
     }
     return this._blockStyle;
+  }
+
+  copyStyle(given, mathMode) {
+    return new ParsegraphBlockStyle(
+      this.server(),
+      this.style(given, mathMode).value()
+    );
   }
 
   budStyle() {
@@ -683,7 +785,7 @@ class ParsegraphServerState {
         verticalSeparation: 10 * VERTICAL_SEPARATION_PADDING,
         horizontalSeparation: 7 * HORIZONTAL_SEPARATION_PADDING,
         lineColor: lineColor,
-        selectedLineColor: selectedLineColor
+        selectedLineColor: selectedLineColor,
       });
     }
     return this._budStyle;
@@ -746,9 +848,12 @@ class ParsegraphServer {
     };
   }
 
+  forEach(cb) {
+    this._messages.forEach((msg) => cb(...msg));
+  }
+
   send(...args) {
     this._clients.forEach((client) => client.send(...args));
-    console.log(args);
     this._messages.push(args);
   }
 

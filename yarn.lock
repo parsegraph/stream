@@ -4138,10 +4138,10 @@ parsegraph-toradians@^1.4.9:
   resolved "https://registry.yarnpkg.com/parsegraph-toradians/-/parsegraph-toradians-1.4.9.tgz#4ac54c576c641f16cac432dd7db5ed807ebc3d1e"
   integrity sha512-oeFTXYNXQiYqvKQ8UOOwnGlT6bLzsSLsIMsWUiGmSEBPsn6//UO/pukq79G2S+CVsC5enswbfwnrEzaTpwpTzg==
 
-parsegraph-viewport@^2.4.1:
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/parsegraph-viewport/-/parsegraph-viewport-2.4.1.tgz#7ca4c2489f6489465e649e4aa8d84488c88b95a5"
-  integrity sha512-JMJXQ2A4ifLLeEukFjNvd8cSUfWRcvsDfyu8qCyBBOa4dfx9onwK/9XxK8McbpVdfF9xrQlVnquwXyEDXAq7HQ==
+parsegraph-viewport@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/parsegraph-viewport/-/parsegraph-viewport-2.5.0.tgz#7aa405dc9ceb3ca72d4e671193b2ad555c563e29"
+  integrity sha512-MFsgEw7XxBumQvByCmhC0CqaJP01IG8rKeHBOX004auK96sTPIHnnotJiU3FBWbmStMUUXahlmQIXR5PFv10Rg==
   dependencies:
     parsegraph-animatedspotlight "^2.0.36"
     parsegraph-animator "^1.5.8"

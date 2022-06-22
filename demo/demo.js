@@ -44,52 +44,62 @@ const getRootPath = () => {
 };
 const root = getRootPath();
 
-async function getDemos() {
-  return new Promise((respond, reject) => {
-    glob("../www/*.html", {}, function (err, files) {
-      if (err) {
-        reject(err);
-      }
-      // files is an array of filenames.
-      respond(
-        files.map((file) => {
-          const m = file.match(/www\/(\w+)\.html/);
-          [1];
-          return m ? m[1] : null;
-        })
-      );
-    });
-  });
-}
-
-app.get(root, async (req, res) => {
-  res.sendFile(path.resolve(process.cwd() + "/../www/demo.html"));
-});
-
-const server = require("./script");
-const bodyParser = require('body-parser')
+const {servePath} = require("./script");
+const bodyParser = require("body-parser");
 
 app.post("/testroute", bodyParser.json(), (req, resp) => {
   console.log("Test route", req.body.path);
+  resp.status(200).end("testroute from server");
 });
 
-app.get("/events", (req, resp) => {
+const servers = {};
+
+app.get(/\/events\/?(.*)$/, (req, resp) => {
   resp.writeHead(200, {
     "Content-Type": "text/event-stream",
     Connection: "keep-alive",
     "Cache-Control": "no-cache",
   });
+  const mainPath = "/home/dafrito/bin";
+  const subPath = req.url.substring("/events/".length);
+  console.log(subPath);
+  if (!servers[subPath]) {
+    servers[subPath] = servePath(mainPath, subPath);
+  }
+  const server = servers[subPath];
   const remover = server.connect((...args) => {
-    console.log(args);
     resp.write(`data: ${JSON.stringify(args)}\n\n`);
   });
-
   req.on("close", remover);
 });
 
-app.use(root, express.static("../src"));
+app.get(/\/graph\/?(.*)$/, (req, resp) => {
+  resp.writeHead(200, {
+    "Content-Type": "text/plain",
+  });
+  const mainPath = "/";
+  const subPath = req.url.substring("/graph/".length);
+  if (!servers[subPath]) {
+    servers[subPath] = servePath(mainPath, subPath);
+  }
+  const server = servers[subPath];
+  console.log("Serving", subPath);
+  const remover = server.forEach((...args) => {
+    const line = JSON.stringify(args);
+    resp.write("" + line.length);
+    resp.write("\n");
+    resp.write("" + line);
+    resp.write("\n");
+  });
+  resp.end();
+});
+
 app.use(root, express.static("../dist"));
 app.use(root, express.static("../www"));
+
+app.get(/(.*)$/, async (req, res) => {
+  res.sendFile(path.resolve(process.cwd() + "/../www/demo.html"));
+});
 
 app.listen(port, () => {
   console.log(

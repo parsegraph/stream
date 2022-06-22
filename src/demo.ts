@@ -7,7 +7,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewport = new Navport();
   const stream = new ParsegraphStream(
     viewport,
-    "http://localhost:15557/events"
   );
+  stream.populate(window.location.pathname);
+  window.addEventListener("popstate", event=>{
+    stream.populate(window.location.pathname);
+  });
+
   render(topElem, viewport);
 });
