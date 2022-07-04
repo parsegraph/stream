@@ -44,7 +44,7 @@ const getRootPath = () => {
 };
 const root = getRootPath();
 
-const {servePath} = require("./script");
+const { streamPath, servePath } = require("./script");
 const bodyParser = require("body-parser");
 
 app.post("/testroute", bodyParser.json(), (req, resp) => {
@@ -53,6 +53,26 @@ app.post("/testroute", bodyParser.json(), (req, resp) => {
 });
 
 const servers = {};
+const streams = {};
+
+app.get(/^\/parsegraph\/(.*)$/, (req, resp) => {
+  resp.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    Connection: "keep-alive",
+    "Cache-Control": "no-cache",
+  });
+  const mainPath = "/";
+  const subPath = req.url.substring("/parsegraph/".length);
+  console.log(req.url, subPath);
+  if (!streams[subPath]) {
+    streams[subPath] = streamPath(mainPath, subPath);
+  }
+  const stream = streams[subPath];
+  const remover = stream.connect((...args) => {
+    resp.write(`data: ${JSON.stringify(args)}\n\n`);
+  });
+  req.on("close", remover);
+});
 
 app.get(/\/events\/?(.*)$/, (req, resp) => {
   resp.writeHead(200, {

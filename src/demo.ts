@@ -5,11 +5,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const topElem = document.getElementById("parsegraph");
   topElem.style.position = "relative";
   const viewport = new Navport();
-  const stream = new ParsegraphStream(
-    viewport,
-  );
+  const stream = new ParsegraphStream(viewport);
   stream.populate(window.location.pathname);
-  window.addEventListener("popstate", event=>{
+  window.addEventListener("popstate", (event) => {
     stream.populate(window.location.pathname);
   });
 

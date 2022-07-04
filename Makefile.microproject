@@ -90,7 +90,7 @@ build-container:
 .PHONY: build-container
 
 run-container: build-container stop-container
-	podman run -e SITE_ROOT=$(DEMO_ROOT) -w /usr/src/ --name parsegraph-$(DIST_NAME) -it -p$(DEMO_PORT):3000 localhost/parsegraph-$(DIST_NAME):latest make demo
+	podman run -e SITE_ROOT=$(DEMO_ROOT) -w /usr/src/ --name parsegraph-$(DIST_NAME) -it -p3000:15557 localhost/parsegraph-$(DIST_NAME):latest make demo
 .PHONY: run-container
 
 stop-container:

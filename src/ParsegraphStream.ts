@@ -28,9 +28,11 @@ class ParsegraphInclude {
     this._nodeId = nodeId;
     this._dir = dir;
     this._child = new ParsegraphStream(
-      this.parent().viewport(), this.parent().palette(), this.parent().fallbackArtist());
+      this.parent().viewport(),
+      this.parent().palette(),
+      this.parent().fallbackArtist()
+    );
     this._child.setParent(this);
-
   }
 
   child() {
@@ -67,7 +69,6 @@ export default class ParsegraphStream {
   _carets: Map<number, BlockCaret>;
   _nodes: Map<number, BlockNode>;
   _blocks: Map<number, Block>;
-  _styles: Map<number, BlockStyle>;
   _artists: Map<string, BlockArtist>;
   _palette: BlockPalette;
   _parent: ParsegraphInclude;
@@ -86,7 +87,6 @@ export default class ParsegraphStream {
     this._carets = new Map();
     this._nodes = new Map();
     this._blocks = new Map();
-    this._styles = new Map();
     this._artists = new Map();
     this._fallbackArtist = fallbackArtist;
     this._parent = null;
@@ -104,10 +104,10 @@ export default class ParsegraphStream {
       url = "/graph/" + url;
     }
     fetch(url, options)
-      .then(resp=>resp.text())
-      .then(data=>{
+      .then((resp) => resp.text())
+      .then((data) => {
         let index = 0;
-        while(index < data.length) {
+        while (index < data.length) {
           const nextLine = data.indexOf("\n", index);
           const lineLenStr = data.substring(index, index + nextLine);
           const lineLen = parseInt(lineLenStr);
@@ -117,7 +117,7 @@ export default class ParsegraphStream {
           this.event(args.shift(), ...args);
           index += lineLen + 2;
         }
-      })
+      });
   }
 
   start(url: string) {
@@ -144,6 +144,40 @@ export default class ParsegraphStream {
       throw new Error("Unknown command: " + command);
     }
     runner.call(this, ...args);
+  }
+
+  parseStyle(initialStyle: any) {
+    if (initialStyle) {
+      initialStyle = { ...initialStyle };
+      initialStyle.borderColor = this.parseColor(initialStyle.borderColor);
+      initialStyle.backgroundColor = this.parseColor(
+        initialStyle.backgroundColor
+      );
+      initialStyle.selectedBackgroundColor = this.parseColor(
+        initialStyle.selectedBackgroundColor
+      );
+      initialStyle.selectedBorderColor = this.parseColor(
+        initialStyle.selectedBorderColor
+      );
+      initialStyle.fontColor = this.parseColor(initialStyle.fontColor);
+      initialStyle.selectedFontColor = this.parseColor(
+        initialStyle.selectedFontColor
+      );
+      initialStyle.lineColor = this.parseColor(initialStyle.lineColor);
+      initialStyle.selectedLineColor = this.parseColor(
+        initialStyle.selectedLineColor
+      );
+    }
+    console.log(initialStyle.selectedLineColor);
+    return initialStyle;
+  }
+
+  setScale(nodeId: number, scale: number) {
+    this.getNode(nodeId).state().setScale(scale);
+  }
+
+  setBlockStyle(blockId: number, initialStyle: any) {
+    this.getBlock(blockId).setBlockStyle(this.parseStyle(initialStyle));
   }
 
   setValue(nodeId: number, blockId: number) {
@@ -200,10 +234,6 @@ export default class ParsegraphStream {
     return node;
   }
 
-  getBlockStyle(styleId: number) {
-    return this._styles.get(styleId);
-  }
-
   getArtist(artistId: string) {
     let artist = this._artists.get(artistId);
     if (!artist) {
@@ -217,19 +247,22 @@ export default class ParsegraphStream {
   }
 
   crease(nodeId: number) {
-    //this.getNode(nodeId).crease();
+    // this.getNode(nodeId).crease();
   }
 
   link(nodeId: number, url: string) {
-    this.getNode(nodeId).value().interact().setClickListener(()=>{
-      let par:ParsegraphStream = this;
-      while (par.isIncluded()) {
-        par = par._parent._parent || par;
-      }
-      history.pushState({}, "", url);
-      par.populate(url);
-      return false;
-    });
+    this.getNode(nodeId)
+      .value()
+      .interact()
+      .setClickListener(() => {
+        let par: ParsegraphStream = this;
+        while (par.isIncluded()) {
+          par = par._parent._parent || par;
+        }
+        history.pushState({}, "", url);
+        par.populate(url);
+        return false;
+      });
   }
 
   action(nodeId: number, url: string, payload: any) {
@@ -268,34 +301,15 @@ export default class ParsegraphStream {
     return new Color(1, 1, 1, 1);
   }
 
-  newBlockStyle(styleId: number, initialStyle: any) {
-    if (initialStyle) {
-      initialStyle.borderColor = this.parseColor(initialStyle.borderColor);
-      initialStyle.backgroundColor = this.parseColor(
-        initialStyle.backgroundColor
-      );
-      initialStyle.selectedBackgroundColor = this.parseColor(
-        initialStyle.selectedBackgroundColor
-      );
-      initialStyle.selectedBorderColor = this.parseColor(
-        initialStyle.selectedBorderColor
-      );
-      initialStyle.fontColor = this.parseColor(initialStyle.fontColor);
-      initialStyle.selectedFontColor = this.parseColor(
-        initialStyle.selectedFontColor
-      );
-      initialStyle.lineColor = this.parseColor(initialStyle.lineColor);
-      initialStyle.selectedLineColor = this.parseColor(
-        initialStyle.selectedLineColor
-      );
-    }
-    this._styles.set(styleId, initialStyle);
-  }
-
-  newBlock(blockId: number, nodeId: number, styleId: number, artistId: string) {
+  newBlock(
+    blockId: number,
+    nodeId: number,
+    initialStyle: any,
+    artistId: string
+  ) {
     const block = new Block(
       this.getNode(nodeId),
-      this.getBlockStyle(styleId),
+      this.parseStyle(initialStyle),
       this.getArtist(artistId)
     );
     this._blocks.set(blockId, block);
@@ -315,6 +329,10 @@ export default class ParsegraphStream {
 
   setLabel(blockId: number, text: string | number) {
     this.getBlock(blockId).setLabel("" + text);
+  }
+
+  setBackgroundColor(r: number, g: number, b: number, a: number) {
+    this.viewport().setBackgroundColor(new Color(r, g, b, a));
   }
 
   isIncluded() {
@@ -342,6 +360,16 @@ export default class ParsegraphStream {
     }
     const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
     include.child().populate(url);
+    return include;
+  }
+
+  stream(nodeId: number, dir: string, url: string) {
+    const n = this.getNode(nodeId);
+    if (!n) {
+      throw new Error("No node found");
+    }
+    const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
+    include.child().start(url);
     return include;
   }
 }
