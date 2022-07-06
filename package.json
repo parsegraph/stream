@@ -30,6 +30,7 @@
     "babel-jest": "^28.1.0",
     "babel-loader": "^8.2.5",
     "chai": "^4.3.6",
+    "electron": "^19.0.7",
     "eslint": "^8.15.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^8.5.0",

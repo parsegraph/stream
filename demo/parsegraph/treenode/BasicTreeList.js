@@ -20,7 +20,7 @@ class BasicTreeList extends AbstractTreeList {
   constructor(server, title, children) {
     super(server, title, children);
     if (!this.palette()) {
-      throw new Error("Palette must be defined")
+      throw new Error("Palette must be defined");
     }
     this._direction = Direction.FORWARD;
     this._align = Alignment.NONE;

@@ -3,7 +3,7 @@ const { WrappingTreeList } = require("./treenode/WrappingTreeList");
 const { XMLParser } = require("fast-xml-parser");
 const { Direction } = require("./direction");
 const { TreeNode } = require("./treenode/TreeNode");
-const { JSONGraph } = require('./json')
+const { JSONGraph } = require("./json");
 
 class XMLGraph extends TreeNode {
   constructor(server) {
@@ -24,7 +24,7 @@ class XMLGraph extends TreeNode {
 
       const parser = new XMLParser({
         ignoreAttributes: false,
-        attributeNamePrefix : "@_"
+        attributeNamePrefix: "@_",
       });
       const children = parser.parse(this._text);
       console.log(children);

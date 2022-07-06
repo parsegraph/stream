@@ -66,7 +66,7 @@ class ParsegraphNode {
     if (this.hasNode(inDirection) || this.hasInclude(inDirection)) {
       this.disconnectNode(inDirection);
     }
-    console.log(node)
+    console.log(node);
     if (!node.isRoot()) {
       node.disconnectNode();
     }

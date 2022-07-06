@@ -8,4 +8,8 @@ SCRIPT_FILES = \
 
 EXTRA_SCRIPTS =
 
+app:
+	CONTENT_ROOT=`pwd` npx electron ./electron
+.PHONY: app
+
 include ./Makefile.microproject

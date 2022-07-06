@@ -2,20 +2,19 @@ const { BlockTreeNode } = require("./treenode/BlockTreeNode");
 const { WrappingTreeList } = require("./treenode/WrappingTreeList");
 const { Direction } = require("./direction");
 const { TreeNode } = require("./treenode/TreeNode");
-const { ParsegraphCaret } = require("./ParsegraphCaret")
+const { ParsegraphCaret } = require("./ParsegraphCaret");
 
-
-const graphWithNewlines = (server, root, list)=>{
+const graphWithNewlines = (server, root, list) => {
   if (!Array.isArray(list)) {
     list = [list];
   }
   list.forEach((child, i) => {
     if (Array.isArray(child)) {
       const list = new JSONList(server);
-      graphWithNewlines(server, list, child)
+      graphWithNewlines(server, list, child);
       root.appendChild(list);
     } else {
-      console.log("Render JSON cell", child)
+      console.log("Render JSON cell", child);
       const cell = new JSONCell(server, child);
       root.appendChild(cell);
     }
@@ -23,7 +22,7 @@ const graphWithNewlines = (server, root, list)=>{
       root.appendNewline();
     }
   });
-}
+};
 
 class JSONList extends WrappingTreeList {
   constructor(server, children) {
@@ -140,9 +139,11 @@ class JSONCell extends TreeNode {
     if (typeof val === "object") {
       const car = new ParsegraphCaret(this.server(), "s", this.palette());
 
-      const childNames = Object.keys(val).filter(key=>!key.startsWith("@_"))
-      childNames.forEach((key, i)=>{
-        car.spawnMove(i == 0 ? 'i' : 'd', 'b');
+      const childNames = Object.keys(val).filter(
+        (key) => !key.startsWith("@_")
+      );
+      childNames.forEach((key, i) => {
+        car.spawnMove(i == 0 ? "i" : "d", "b");
         car.push();
         car.label(key.toString());
 
@@ -150,21 +151,26 @@ class JSONCell extends TreeNode {
         if (Array.isArray(childVal)) {
           const list = new JSONList(this.server());
           graphWithNewlines(this.server(), list, childVal);
-          car.connect('f', list.root());
+          car.connect("f", list.root());
         } else if (typeof childVal === "object") {
-          const attrKeys = Object.keys(childVal).filter(key=>key.startsWith("@_"))
+          const attrKeys = Object.keys(childVal).filter((key) =>
+            key.startsWith("@_")
+          );
           if (attrKeys.length > 0) {
             car.push();
-            attrKeys.forEach((key, i)=>{
-              car.spawnMove(i == 0 ? 'i' : 'd', 'b');
+            attrKeys.forEach((key, i) => {
+              car.spawnMove(i == 0 ? "i" : "d", "b");
               car.label(key.substring(1));
-              car.connect('f', new JSONCell(this.server(), childVal[key]).root());
+              car.connect(
+                "f",
+                new JSONCell(this.server(), childVal[key]).root()
+              );
             });
             car.pop();
           }
-          car.connect('f', new JSONCell(this.server(), childVal).root());
+          car.connect("f", new JSONCell(this.server(), childVal).root());
         } else {
-          car.connect('f', new JSONCell(this.server(), childVal).root());
+          car.connect("f", new JSONCell(this.server(), childVal).root());
         }
         car.pop();
       });
@@ -195,7 +201,7 @@ class JSONGraph extends TreeNode {
     if (this._oldText === text) {
       return;
     }
-    console.log("PArsing JSON ", text)
+    console.log("PArsing JSON ", text);
     this._text = text;
     this.setValue(JSON.parse(this._text));
     this._oldText = this._text;
@@ -206,7 +212,7 @@ class JSONGraph extends TreeNode {
       return;
     }
     this._value = val;
-    console.log("SEtting JSON value", val)
+    console.log("SEtting JSON value", val);
     this.invalidate();
   }
 

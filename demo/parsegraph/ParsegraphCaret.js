@@ -5,6 +5,7 @@ const {
   reverseDirection,
 } = require("./direction");
 const { ParsegraphNode, Fit } = require("./ParsegraphNode");
+const { ParsegraphEmbed} = require("./ParsegraphEmbed");
 
 const { id } = require("./id");
 
@@ -185,6 +186,19 @@ class ParsegraphCaret {
   include(dir, url) {
     const node = this.node();
     node.include(readDirection(dir), url);
+  }
+
+  embed(...args) {
+    let node = this.node();
+    let val;
+    if (args.length > 1) {
+      node = node.nodeAt(readDirection(args[0]));
+      val = args[1];
+    } else {
+      val = args[0];
+    }
+
+    return new ParsegraphEmbed(this.server(), node, val);
   }
 
   stream(dir, url) {

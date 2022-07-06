@@ -1,10 +1,10 @@
 const { BlockTreeNode } = require("./treenode/BlockTreeNode");
 const { BasicTreeList } = require("./treenode/BasicTreeList");
-const {parseScript} = require("esprima");
+const { parseScript } = require("esprima");
 const { Direction } = require("./direction");
 const { TreeNode } = require("./treenode/TreeNode");
-const { ParsegraphCaret} = require ('./ParsegraphCaret')
-const {ConstantTreeNode} = require ("./treenode/ConstantTreeNode")
+const { ParsegraphCaret } = require("./ParsegraphCaret");
+const { ConstantTreeNode } = require("./treenode/ConstantTreeNode");
 
 class ECMAList extends BasicTreeList {
   constructor(server, children) {
@@ -84,11 +84,11 @@ class ECMACellNode extends TreeNode {
 
   renderAssignmentExpression(val) {
     const car = new ParsegraphCaret(this.server(), "s", this.palette());
-    car.connect('i', this.renderNode(val.left))
-    car.spawnMove('f', 'u')
-    car.label(val.operator)
-    car.connect('f', this.renderNode(val.right))
-    return car.root()
+    car.connect("i", this.renderNode(val.left));
+    car.spawnMove("f", "u");
+    car.label(val.operator);
+    car.connect("f", this.renderNode(val.right));
+    return car.root();
   }
 
   renderExpressionStatement(val) {
@@ -97,27 +97,27 @@ class ECMACellNode extends TreeNode {
 
   renderFunctionDeclaration(val) {
     const car = new ParsegraphCaret(this.server(), "u", this.palette());
-    car.label("function")
-    car.push()
-    car.spawnMove('f', 's')
-    car.label(val.id?.name)
-    val.params.forEach((param, i)=>{
-      car.spawnMove(i === 0 ? 'i': 'f', 'b')
+    car.label("function");
+    car.push();
+    car.spawnMove("f", "s");
+    car.label(val.id?.name);
+    val.params.forEach((param, i) => {
+      car.spawnMove(i === 0 ? "i" : "f", "b");
       car.label(param?.name);
     });
-    car.pop()
-    val?.body?.body?.forEach((stmt, i)=>{
-      car.spawnMove('d', 'u');
+    car.pop();
+    val?.body?.body?.forEach((stmt, i) => {
+      car.spawnMove("d", "u");
       const c = new ECMACellNode(this.server(), stmt);
-      car.connect('f', c.root())
+      car.connect("f", c.root());
     });
     return car.root();
   }
 
   renderMemberExpression(val) {
     const car = new ParsegraphCaret(this.server(), "s", this.palette());
-    car.connect('i', this.renderNode(val.object))
-    car.connect('d', this.renderNode(val.property))
+    car.connect("i", this.renderNode(val.object));
+    car.connect("d", this.renderNode(val.property));
     return car.root();
   }
 
@@ -126,25 +126,25 @@ class ECMACellNode extends TreeNode {
     if (func) {
       return func.call(this, val);
     }
-    const n = this.palette().spawn('b')
-    n.value().setLabel(JSON.stringify(val))
+    const n = this.palette().spawn("b");
+    n.value().setLabel(JSON.stringify(val));
     return n;
   }
 
   renderThisExpression(val) {
-    const n = this.palette().spawn('u')
-    n.value().setLabel("this")
+    const n = this.palette().spawn("u");
+    n.value().setLabel("this");
     return n;
   }
 
   renderCallExpression(val) {
     const car = new ParsegraphCaret(this.server(), "s", this.palette());
-    car.connect('i', this.renderNode(val.callee))
-    car.spawnMove('d', 's')
-    val.arguments.forEach((arg, i)=>{
-      car.spawnMove(i === 0 ? 'i' : 'f', 's')
-      car.connect('i', this.renderNode(arg))
-    })
+    car.connect("i", this.renderNode(val.callee));
+    car.spawnMove("d", "s");
+    val.arguments.forEach((arg, i) => {
+      car.spawnMove(i === 0 ? "i" : "f", "s");
+      car.connect("i", this.renderNode(arg));
+    });
     return car.root();
   }
 
@@ -156,65 +156,69 @@ class ECMACellNode extends TreeNode {
 
   renderBinaryExpression(val) {
     const car = new ParsegraphCaret(this.server(), "s", this.palette());
-    car.connect('i', this.renderNode(val.left));
-    car.spawnMove('f', 'u')
-    car.label(val.operator)
-    car.connect('f', this.renderNode(val.right))
+    car.connect("i", this.renderNode(val.left));
+    car.spawnMove("f", "u");
+    car.label(val.operator);
+    car.connect("f", this.renderNode(val.right));
     return car.root();
   }
 
   renderVariableDeclaration(val) {
-    const list = new BasicTreeList(this.server(), new BlockTreeNode(this.server(), 'b'), val.declarations.map(decl=>{
-      return new ConstantTreeNode(this.server(), ()=>this.renderNode(decl))
-    }))
+    const list = new BasicTreeList(
+      this.server(),
+      new BlockTreeNode(this.server(), "b"),
+      val.declarations.map((decl) => {
+        return new ConstantTreeNode(this.server(), () => this.renderNode(decl));
+      })
+    );
     return list.root();
   }
 
   renderFunctionExpression(val) {
     const car = new ParsegraphCaret(this.server(), "u", this.palette());
-    car.label('function')
-    car.spawnMove('f', 's')
-    val.params.forEach((param, i)=>{
-      car.spawnMove(i === 0 ? 'i' : 'f', this.renderNode(param))
-    })
+    car.label("function");
+    car.spawnMove("f", "s");
+    val.params.forEach((param, i) => {
+      car.spawnMove(i === 0 ? "i" : "f", this.renderNode(param));
+    });
     return car.root();
   }
 
   renderVariableDeclarator(val) {
     const car = new ParsegraphCaret(this.server(), "u", this.palette());
-    car.label('function')
-    car.spawnMove('f', 's')
-    car.connect('i', this.renderNode(val.id));
-    car.spawnMove('f', this.renderNode(val.init));
+    car.label("function");
+    car.spawnMove("f", "s");
+    car.connect("i", this.renderNode(val.id));
+    car.spawnMove("f", this.renderNode(val.init));
     return car.root();
   }
 
   renderEmptyStatement(val) {
-    return this.palette().spawn('u');
+    return this.palette().spawn("u");
   }
 
   renderUnaryExpression(val) {
     const car = new ParsegraphCaret(this.server(), "u", this.palette());
     car.label(val.operator);
-    car.connect('f', this.renderNode(val.argument))
+    car.connect("f", this.renderNode(val.argument));
     return car.root();
   }
 
   renderNewExpression(val) {
     const car = new ParsegraphCaret(this.server(), "s", this.palette());
-    car.label('new')
-    console.log(val)
-    car.connect('i', this.renderNode(val.callee))
-    car.spawnMove('d', 's')
-    val.arguments.forEach((arg, i)=>{
-      car.spawnMove(i === 0 ? 'i' : 'f', 's')
-      car.connect('i', this.renderNode(arg))
-    })
+    car.label("new");
+    console.log(val);
+    car.connect("i", this.renderNode(val.callee));
+    car.spawnMove("d", "s");
+    val.arguments.forEach((arg, i) => {
+      car.spawnMove(i === 0 ? "i" : "f", "s");
+      car.connect("i", this.renderNode(arg));
+    });
     return car.root();
   }
 
   renderIdentifier(val) {
-    const n = this.palette().spawn('b')
+    const n = this.palette().spawn("b");
     n.value().setLabel(val.name);
     return n;
   }

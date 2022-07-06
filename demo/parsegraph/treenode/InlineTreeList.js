@@ -1,5 +1,5 @@
 const { BlockTreeNode } = require("./BlockTreeNode");
-const {AbstractTreeList} = require("./AbstractTreeList")
+const { AbstractTreeList } = require("./AbstractTreeList");
 const { Direction, SHRINK_SCALE } = require("../direction");
 const { TreeNode } = require("./TreeNode");
 
@@ -22,4 +22,4 @@ class InlineTreeList extends AbstractTreeList {
   }
 }
 
-module.exports = {InlineTreeList}
+module.exports = { InlineTreeList };

@@ -133,9 +133,9 @@ const getPerpendicularAxis = (axisOrDirection) => {
       // Assume it's a direction.
       return getPerpendicularAxis(getDirectionAxis(axisOrDirection));
   }
-}
+};
 
-const getPositiveDirection = (given)=>{
+const getPositiveDirection = (given) => {
   switch (given) {
     case Axis.HORIZONTAL:
       return Direction.FORWARD;
@@ -144,26 +144,26 @@ const getPositiveDirection = (given)=>{
     case Axis.Z:
       return Direction.OUTWARD;
     case Axis.NULL:
-      throw new Error("BAD AXIS")
+      throw new Error("BAD AXIS");
   }
-}
+};
 
 const getNegativeDirection = (given) => {
   return reverseDirection(getPositiveDirection(given));
-}
+};
 
 const isPositiveDirection = (given) => {
   const positiveDirection = getPositiveDirection(getDirectionAxis(given));
   return given === positiveDirection;
-}
+};
 
 const isNegativeDirection = (given) => {
   return isPositiveDirection(reverseDirection(given));
-}
+};
 
 const directionSign = (given) => {
   return isPositiveDirection(given) ? 1 : -1;
-}
+};
 
 function turnLeft(given) {
   switch (given) {

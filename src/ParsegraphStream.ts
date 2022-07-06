@@ -16,6 +16,7 @@ import Direction, {
   readFit,
 } from "parsegraph-direction";
 import { ActionCarousel } from "parsegraph-carousel";
+import {PaintedNode, DOMContent} from 'parsegraph-artist';
 
 class ParsegraphInclude {
   _parent: ParsegraphStream;
@@ -43,6 +44,10 @@ class ParsegraphInclude {
     return this._parent;
   }
 
+  prefix(): string {
+    return this.parent()?.prefix();
+  }
+
   parentNode() {
     const p = this.parent().getNode(this._nodeId);
     if (!p) {
@@ -67,11 +72,13 @@ export default class ParsegraphStream {
   _fallbackArtist: BlockArtist;
 
   _carets: Map<number, BlockCaret>;
-  _nodes: Map<number, BlockNode>;
+  _nodes: Map<number, PaintedNode>;
   _blocks: Map<number, Block>;
+  _embeds:Map<number, DOMContent>;
   _artists: Map<string, BlockArtist>;
   _palette: BlockPalette;
-  _parent: ParsegraphInclude;
+  _include: ParsegraphInclude;
+  _prefix: string;
 
   _es: EventSource;
 
@@ -87,13 +94,27 @@ export default class ParsegraphStream {
     this._carets = new Map();
     this._nodes = new Map();
     this._blocks = new Map();
+    this._embeds = new Map();
     this._artists = new Map();
     this._fallbackArtist = fallbackArtist;
-    this._parent = null;
+    this._include = null;
+    this._prefix = "";
   }
 
-  setParent(parent: ParsegraphInclude) {
-    this._parent = parent;
+  setParent(include: ParsegraphInclude) {
+    this._include = include;
+  }
+
+  setPrefix(prefix: string) {
+    this._prefix = prefix;
+  }
+
+  prefix(): string {
+    return this._prefix
+      ? this._prefix
+      : this.isIncluded()
+      ? this.getInclude().prefix()
+      : "";
   }
 
   populate(url: string, options?: any) {
@@ -101,8 +122,9 @@ export default class ParsegraphStream {
       this.stop();
     }
     if (url.startsWith("/")) {
-      url = "/graph/" + url;
+      url = this.prefix() + "/graph/" + url;
     }
+    console.log("populate" + url);
     fetch(url, options)
       .then((resp) => resp.text())
       .then((data) => {
@@ -123,6 +145,10 @@ export default class ParsegraphStream {
   start(url: string) {
     if (this._es) {
       this.stop();
+    }
+    console.log("Connecting to EventSource", url);
+    if (url.startsWith("/")) {
+      url = this.prefix() + "/parsegraph/" + url;
     }
     this._es = new EventSource(url);
     this._es.onmessage = (event) => {
@@ -250,6 +276,10 @@ export default class ParsegraphStream {
     // this.getNode(nodeId).crease();
   }
 
+  getInclude() {
+    return this._include;
+  }
+
   link(nodeId: number, url: string) {
     this.getNode(nodeId)
       .value()
@@ -257,7 +287,7 @@ export default class ParsegraphStream {
       .setClickListener(() => {
         let par: ParsegraphStream = this;
         while (par.isIncluded()) {
-          par = par._parent._parent || par;
+          par = par.getInclude().parent() || par;
         }
         history.pushState({}, "", url);
         par.populate(url);
@@ -270,6 +300,7 @@ export default class ParsegraphStream {
     n.value()
       .interact()
       .setClickListener(() => {
+        console.log("Click to fetch", url);
         fetch(url, payload);
         return true;
       });
@@ -299,6 +330,36 @@ export default class ParsegraphStream {
       return new Color(parts[0], parts[1], parts[2], parts[3]);
     }
     return new Color(1, 1, 1, 1);
+  }
+
+  setHtml(embedId: number, html: string) {
+    if (html.startsWith("/")) {
+      html = this.prefix() + "/raw/" + html;
+    }
+    this._embeds.get(embedId)?.setCreator(()=>{
+      const cont = document.createElement("img");
+      cont.src = html;
+      return cont;
+    });
+  }
+
+  newEmbed(embedId: number, nodeId: number, html: string) {
+    if (html.startsWith("/")) {
+      html = this.prefix() + "/raw/" + html;
+    }
+    const embed = new DOMContent(()=>{
+      const cont = document.createElement("img");
+      cont.src = html;
+      console.log(html);
+      return cont;
+    });
+    const n = this.getNode(nodeId);
+    if (n) {
+      embed.setNode(n)
+      n.setValue(embed);
+    }
+    this._embeds.set(embedId, embed);
+    return embed;
   }
 
   newBlock(
@@ -336,12 +397,12 @@ export default class ParsegraphStream {
   }
 
   isIncluded() {
-    return !!this._parent;
+    return !!this._include;
   }
 
   setRoot(nodeId: number) {
     if (this.isIncluded()) {
-      this._parent.setRoot(this.getNode(nodeId));
+      this._include.setRoot(this.getNode(nodeId));
       return;
     }
     const root = this.getNode(nodeId);

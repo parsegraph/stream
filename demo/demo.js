@@ -44,6 +44,13 @@ const getRootPath = () => {
 };
 const root = getRootPath();
 
+const getContentRoot = () => {
+  if (process.env.CONTENT_ROOT) {
+    return process.env.CONTENT_ROOT;
+  }
+  return '/'
+};
+
 const { streamPath, servePath } = require("./script");
 const bodyParser = require("body-parser");
 
@@ -61,9 +68,9 @@ app.get(/^\/parsegraph\/(.*)$/, (req, resp) => {
     Connection: "keep-alive",
     "Cache-Control": "no-cache",
   });
-  const mainPath = "/";
-  const subPath = req.url.substring("/parsegraph/".length);
-  console.log(req.url, subPath);
+  const mainPath = getContentRoot();
+  const subPath = req.url.substring("/parsegraph/".length).replaceAll(/\/+$/g, '')
+  console.log("EventSource", req.url, subPath);
   if (!streams[subPath]) {
     streams[subPath] = streamPath(mainPath, subPath);
   }
@@ -74,13 +81,21 @@ app.get(/^\/parsegraph\/(.*)$/, (req, resp) => {
   req.on("close", remover);
 });
 
+app.get(/\/raw\/?(.*)$/, (req, resp) => {
+  const mainPath = getContentRoot();
+  const subPath = req.url.substring("/raw/".length);
+  resp.sendFile(path.join(mainPath, subPath), {
+    root: mainPath
+  })
+})
+
 app.get(/\/events\/?(.*)$/, (req, resp) => {
   resp.writeHead(200, {
     "Content-Type": "text/event-stream",
     Connection: "keep-alive",
     "Cache-Control": "no-cache",
   });
-  const mainPath = "/home/dafrito/bin";
+  const mainPath = getContentRoot();
   const subPath = req.url.substring("/events/".length);
   console.log(subPath);
   if (!servers[subPath]) {
@@ -97,7 +112,7 @@ app.get(/\/graph\/?(.*)$/, (req, resp) => {
   resp.writeHead(200, {
     "Content-Type": "text/plain",
   });
-  const mainPath = "/";
+  const mainPath = getContentRoot();
   const subPath = req.url.substring("/graph/".length);
   if (!servers[subPath]) {
     servers[subPath] = servePath(mainPath, subPath);

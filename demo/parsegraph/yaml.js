@@ -1,9 +1,9 @@
 const { BlockTreeNode } = require("./treenode/BlockTreeNode");
 const { WrappingTreeList } = require("./treenode/WrappingTreeList");
-const { parse } = require("yaml")
+const { parse } = require("yaml");
 const { Direction } = require("./direction");
 const { TreeNode } = require("./treenode/TreeNode");
-const { JSONGraph } = require('./json')
+const { JSONGraph } = require("./json");
 
 class YAMLGraph extends TreeNode {
   constructor(server) {

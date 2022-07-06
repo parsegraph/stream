@@ -6,7 +6,7 @@ const { LispGraph } = require("./parsegraph/lisp");
 const { XMLGraph } = require("./parsegraph/xml");
 const { JSONGraph } = require("./parsegraph/json");
 const { YAMLGraph } = require("./parsegraph/yaml");
-const { ECMAScriptGraph } = require("./parsegraph/ecmascript")
+const { ECMAScriptGraph } = require("./parsegraph/ecmascript");
 
 const makeTimer = (server) => {
   const car = server.state().newCaret("u");
@@ -41,7 +41,7 @@ const makeFile = (server, mainPath, subPath) => {
   ]).stdout.toString();
   car.label(fileType);
 
-  car.stream("d", "/parsegraph/" + fullPath);
+  car.stream("d", subPath)
 
   return car.root();
 };
@@ -101,14 +101,31 @@ const streamPath = (mainPath, subPath) => {
     fullPath,
   ]).stdout.toString();
 
+  if (fileType.startsWith("PNG image data")) {
+    const car = server.state().newCaret("b")
+    car.label("PNG")
+    car.spawnMove('d', 'b')
+    car.embed(`${subPath}`)
+    server.state().setRoot(car.root())
+    return server;
+  }
+
   let graph;
   if (fullPath.endsWith(".json") || fileType.includes("JSON")) {
     graph = new JSONGraph(server);
-  } else if (fullPath.endsWith(".js") || fullPath.endsWith(".ts") || fileType.includes("Java")) {
+  } else if (
+    fullPath.endsWith(".js") ||
+    fullPath.endsWith(".ts") ||
+    fileType.includes("Java")
+  ) {
     graph = new ECMAScriptGraph(server);
   } else if (fullPath.endsWith(".yml") || fileType.includes("YAML")) {
     graph = new YAMLGraph(server);
-  } else if (fullPath.endsWith(".xml") || fileType.includes("XML 1.0 document")) {
+  } else if (
+    fullPath.endsWith(".xml") ||
+    fullPath.endsWith(".html") ||
+    fileType.includes("XML 1.0 document")
+  ) {
     graph = new XMLGraph(server);
   } else {
     graph = new LispGraph(server);
