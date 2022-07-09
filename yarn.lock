@@ -4261,7 +4261,7 @@ parsegraph-animator@^1.5.8:
 
 parsegraph-artist@^3.4.24:
   version "3.4.24"
-  resolved "https://registry.npmjs.org/parsegraph-artist/-/parsegraph-artist-3.4.24.tgz"
+  resolved "https://registry.yarnpkg.com/parsegraph-artist/-/parsegraph-artist-3.4.24.tgz#7c728cda1dd5ec7fd32af271a2e4fbb5a3399b5e"
   integrity sha512-fA2bv9Uqq51UmbDsaALO8MGhvfeHdjJpQMIyGMBVyaKOEOZ/AP7VdWHYF0EQRi1aZPDlx61mMTJK2JflsgtKCA==
   dependencies:
     parsegraph-camera "^1.4.18"
@@ -4281,7 +4281,7 @@ parsegraph-artist@^3.4.24:
 
 parsegraph-block@^4.4.17:
   version "4.4.17"
-  resolved "https://registry.npmjs.org/parsegraph-block/-/parsegraph-block-4.4.17.tgz"
+  resolved "https://registry.yarnpkg.com/parsegraph-block/-/parsegraph-block-4.4.17.tgz#ea205e70d06af72301faef553cb0e0de4e5fbced"
   integrity sha512-9atzTTVZDuqNsFybV4/HP/RA9biP4nbQ2GAXM41LyGm0ejh8dwHU1KZNuVdYL22VObbAOcuW2W4skg6bYSp8aQ==
   dependencies:
     parsegraph-artist "^3.4.24"
@@ -4301,7 +4301,7 @@ parsegraph-block@^4.4.17:
 
 parsegraph-blockpainter@^1.7.1:
   version "1.7.1"
-  resolved "https://registry.npmjs.org/parsegraph-blockpainter/-/parsegraph-blockpainter-1.7.1.tgz"
+  resolved "https://registry.yarnpkg.com/parsegraph-blockpainter/-/parsegraph-blockpainter-1.7.1.tgz#6f644bff81c8611ed6809e5b6286c42c8ee22e28"
   integrity sha512-Y1IwoA3LYJ8YJ9UF6D/KeqMk8h9Am5yUg6L1DVYkkoYq4boIo4d3PUdaF6e5u3f/boQ2w/Ip6xHcTaGZW5FCcQ==
   dependencies:
     parsegraph-color "^1.4.7"
@@ -4319,7 +4319,7 @@ parsegraph-camera@^1.4.18:
 
 parsegraph-carousel@^2.3.29:
   version "2.3.29"
-  resolved "https://registry.npmjs.org/parsegraph-carousel/-/parsegraph-carousel-2.3.29.tgz"
+  resolved "https://registry.yarnpkg.com/parsegraph-carousel/-/parsegraph-carousel-2.3.29.tgz#3268e7ee4858f1449e3ecba2ea9810bcefdc998e"
   integrity sha512-5HdNlaoGiOX/7eDcys0C7oj1RHgqC7aSWn5Rq2EZgwNBqoTBeT8JP98oHXWxdqMgOYN9SVcu0UnWLC7s/PKDjQ==
   dependencies:
     parsegraph-artist "^3.4.24"
@@ -4506,7 +4506,7 @@ parsegraph-shader@^1.5.6:
 
 parsegraph-showincamera@^1.7.4:
   version "1.7.4"
-  resolved "https://registry.npmjs.org/parsegraph-showincamera/-/parsegraph-showincamera-1.7.4.tgz"
+  resolved "https://registry.yarnpkg.com/parsegraph-showincamera/-/parsegraph-showincamera-1.7.4.tgz#7cefe8a6f34f1a8b8fa0f7e8fbf9d5fb52e7a299"
   integrity sha512-rN20MeC11/okzka0yM/mC7fUYWvMxZoOwguaOi1zNBBdnjQin2uT5zjB1kchcraTVLoGCT5CA/dFCvzmG8tYjA==
   dependencies:
     parsegraph-camera "^1.4.18"
