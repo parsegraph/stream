@@ -4482,10 +4482,10 @@ parsegraph-toradians@^1.4.9:
   resolved "https://registry.npmjs.org/parsegraph-toradians/-/parsegraph-toradians-1.4.9.tgz"
   integrity sha512-oeFTXYNXQiYqvKQ8UOOwnGlT6bLzsSLsIMsWUiGmSEBPsn6//UO/pukq79G2S+CVsC5enswbfwnrEzaTpwpTzg==
 
-parsegraph-viewport@^2.6.3:
-  version "2.6.3"
-  resolved "https://registry.npmjs.org/parsegraph-viewport/-/parsegraph-viewport-2.6.3.tgz"
-  integrity sha512-I92H0oJ6wGJcW9BHt/MDfpyKdd667zG1zpiReqigUJwQ2HrBhAro/NfRkRX+Jd3x+JcdHVdyQmJvsayRMk1Ogw==
+parsegraph-viewport@^2.7.0:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/parsegraph-viewport/-/parsegraph-viewport-2.7.0.tgz#ecd81dc01251dc84f362e2b78732aca38729e0a4"
+  integrity sha512-BT1wjv6VyMDGhJJrMc5UX3A9zBZOTtSJ3xsFpkQ4GOqVBNOpkPNuPs9dqHThDQ/jkCiJXhztHNbH/DIh+tKrtQ==
   dependencies:
     parsegraph-animatedspotlight "^2.0.36"
     parsegraph-animator "^1.5.8"

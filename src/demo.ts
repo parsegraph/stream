@@ -4,12 +4,10 @@ import ParsegraphStream from "./ParsegraphStream";
 document.addEventListener("DOMContentLoaded", () => {
   const topElem = document.getElementById("parsegraph");
   topElem.style.position = "relative";
-  const viewport = new Navport();
+  const viewport = new Navport(null);
   const stream = new ParsegraphStream(viewport);
-  stream.populate(window.location.pathname);
-  window.addEventListener("popstate", (event) => {
-    stream.populate(window.location.pathname);
-  });
-
+  const refresh=()=>stream.populate(window.location.pathname);
+  window.addEventListener("popstate", refresh);
+  refresh();
   render(topElem, viewport);
 });

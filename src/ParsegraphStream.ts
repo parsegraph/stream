@@ -17,6 +17,7 @@ import Direction, {
 } from "parsegraph-direction";
 import { ActionCarousel } from "parsegraph-carousel";
 import {PaintedNode, DOMContent} from 'parsegraph-artist';
+import { showInCamera } from 'parsegraph-showincamera';
 
 class ParsegraphInclude {
   _parent: ParsegraphStream;
@@ -408,6 +409,7 @@ export default class ParsegraphStream {
     const root = this.getNode(nodeId);
     this.viewport().setRoot(root);
     this.viewport().showInCamera(root);
+    showInCamera(root, this.viewport().camera(), false);
   }
 
   fallbackArtist() {
