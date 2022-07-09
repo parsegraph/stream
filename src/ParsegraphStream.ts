@@ -19,7 +19,7 @@ import { ActionCarousel } from "parsegraph-carousel";
 import {PaintedNode, DOMContent} from 'parsegraph-artist';
 import { showInCamera } from 'parsegraph-showincamera';
 
-class ParsegraphInclude {
+export class ParsegraphInclude {
   _parent: ParsegraphStream;
   _nodeId: number;
   _dir: Direction;
