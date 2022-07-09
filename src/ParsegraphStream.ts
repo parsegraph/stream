@@ -281,7 +281,7 @@ export default class ParsegraphStream {
     return this._include;
   }
 
-  link(nodeId: number, url: string) {
+  link(nodeId: number, url: string, options?: any) {
     this.getNode(nodeId)
       .value()
       .interact()
@@ -291,12 +291,12 @@ export default class ParsegraphStream {
           par = par.getInclude().parent() || par;
         }
         history.pushState({}, "", url);
-        par.populate(url);
+        par.populate(url, options);
         return false;
       });
   }
 
-  action(nodeId: number, url: string, payload: any) {
+  action(nodeId: number, url: string, payload?: any) {
     const n = this.getNode(nodeId);
     n.value()
       .interact()
@@ -416,13 +416,13 @@ export default class ParsegraphStream {
     return this._fallbackArtist;
   }
 
-  include(nodeId: number, dir: string, url: string) {
+  include(nodeId: number, dir: string, url: string, options?: any) {
     const n = this.getNode(nodeId);
     if (!n) {
       throw new Error("No node found");
     }
     const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
-    include.child().populate(url);
+    include.child().populate(url, options);
     return include;
   }
 
