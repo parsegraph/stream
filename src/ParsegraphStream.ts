@@ -126,7 +126,6 @@ export default class ParsegraphStream {
     if (url.startsWith("/")) {
       url = this.prefix() + "/graph/" + url;
     }
-    console.log("populate" + url);
     fetch(url, options)
       .then((resp) => resp.text())
       .then((data) => {
@@ -138,7 +137,6 @@ export default class ParsegraphStream {
     if (this._es) {
       this.stop();
     }
-    console.log("Connecting to EventSource", url);
     if (url.startsWith("/")) {
       url = this.prefix() + "/parsegraph/" + url;
     }
@@ -186,7 +184,6 @@ export default class ParsegraphStream {
         initialStyle.selectedLineColor
       );
     }
-    console.log(initialStyle.selectedLineColor);
     return initialStyle;
   }
 
@@ -292,17 +289,16 @@ export default class ParsegraphStream {
     n.value()
       .interact()
       .setClickListener(() => {
-        console.log("Click to fetch", url);
         fetch(url, payload);
         return true;
       });
   }
 
   setCallbackUrl(path: string) {
-    this._callbackUrl = path
+    this._callbackUrl = path;
   }
 
-  _callbackUrl:string;
+  _callbackUrl: string;
 
   callback(nodeId: number, callbackId: number) {
     const n = this.getNode(nodeId);
@@ -311,11 +307,11 @@ export default class ParsegraphStream {
       .setClickListener(() => {
         if (this._callbackUrl) {
           fetch(this._callbackUrl, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
-            body: "" + callbackId
+            body: "" + callbackId,
           });
         }
         return true;
@@ -366,7 +362,6 @@ export default class ParsegraphStream {
     const embed = new DOMContent(() => {
       const cont = document.createElement("img");
       cont.src = html;
-      console.log(html);
       return cont;
     });
     const n = this.getNode(nodeId);

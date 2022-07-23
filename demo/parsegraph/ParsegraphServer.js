@@ -10,11 +10,11 @@ class ParsegraphServer {
   }
 
   scheduleUpdate() {
-    this.send("scheduleUpdate")
+    this.send("scheduleUpdate");
   }
 
   setCallbackUrl(url) {
-    this.send("setCallbackUrl", url)
+    this.send("setCallbackUrl", url);
   }
 
   addCallback(cb) {
@@ -23,7 +23,6 @@ class ParsegraphServer {
   }
 
   callback(callbackId) {
-    console.log("Making callback")
     this._callbacks[callbackId]();
   }
 

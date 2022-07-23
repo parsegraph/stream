@@ -82,7 +82,7 @@ const makeTree = (server, mainPath, subPath) => {
       const stats = lstatSync(join(fullPath, path), { throwIfNoEntry: false });
       if (!stats) {
         s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
-        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128  / 255})`;
+        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128 / 255})`;
       } else if (stats.isSymbolicLink()) {
         s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
         s.backgroundColor = `rgba(${198 / 255}, ${255 / 255}, ${255 / 255})`;
@@ -93,9 +93,9 @@ const makeTree = (server, mainPath, subPath) => {
         s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
         s.backgroundColor = `rgba(${234 / 255}, ${221 / 255}, ${202 / 255})`;
       }
-    } catch(ex) {
-        s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
-        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128  / 255})`;
+    } catch (ex) {
+      s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
+      s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128 / 255})`;
     }
 
     car.node().value().setBlockStyle(s);

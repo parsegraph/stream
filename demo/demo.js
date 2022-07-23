@@ -74,7 +74,7 @@ app.get(/^\/parsegraph\/(.*)$/, (req, resp) => {
     .replaceAll(/\/+$/g, "");
   if (!streams[subPath]) {
     streams[subPath] = streamPath(mainPath, subPath);
-    streams[subPath].setCallbackUrl("/callback/" + subPath)
+    streams[subPath].setCallbackUrl("/callback/" + subPath);
   }
   const stream = streams[subPath];
   const remover = stream.connect((...args) => {
@@ -99,10 +99,9 @@ app.get(/\/events\/?(.*)$/, (req, resp) => {
   });
   const mainPath = getContentRoot();
   const subPath = req.url.substring("/events/".length);
-  console.log(subPath);
   if (!servers[subPath]) {
     servers[subPath] = servePath(mainPath, subPath);
-    servers[subPath].setCallbackUrl("/callback/" + subPath)
+    servers[subPath].setCallbackUrl("/callback/" + subPath);
   }
   const server = servers[subPath];
   const remover = server.connect((...args) => {
@@ -119,10 +118,9 @@ app.get(/\/graph\/?(.*)$/, (req, resp) => {
   const subPath = req.url.substring("/graph/".length);
   if (!servers[subPath]) {
     servers[subPath] = servePath(mainPath, subPath);
-    servers[subPath].setCallbackUrl("/callback/" + subPath)
+    servers[subPath].setCallbackUrl("/callback/" + subPath);
   }
   const server = servers[subPath];
-  console.log("Serving", subPath);
   const remover = server.forEach((...args) => {
     const line = JSON.stringify(args);
     resp.write("" + line.length);
