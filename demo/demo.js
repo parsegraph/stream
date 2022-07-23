@@ -69,8 +69,9 @@ app.get(/^\/parsegraph\/(.*)$/, (req, resp) => {
     "Cache-Control": "no-cache",
   });
   const mainPath = getContentRoot();
-  const subPath = req.url.substring("/parsegraph/".length).replaceAll(/\/+$/g, '')
-  console.log("EventSource", req.url, subPath);
+  const subPath = req.url
+    .substring("/parsegraph/".length)
+    .replaceAll(/\/+$/g, "");
   if (!streams[subPath]) {
     streams[subPath] = streamPath(mainPath, subPath);
     streams[subPath].setCallbackUrl("/callback/" + subPath)
