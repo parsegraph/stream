@@ -16,7 +16,7 @@ const makeTimer = (server) => {
   server.state().setRoot(car.root());
 };
 
-const { statSync, readFileSync, watch } = require("fs");
+const { lstatSync, statSync, readFileSync, watch } = require("fs");
 const { join } = require("path");
 
 const makeFile = (server, mainPath, subPath) => {
@@ -78,8 +78,25 @@ const makeTree = (server, mainPath, subPath) => {
     car.spawnMove("d", "b");
 
     const s = server.state().copyStyle("b");
-    s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
-    s.backgroundColor = `rgba(${234 / 255}, ${221 / 255}, ${202 / 255})`;
+    try {
+      const stats = lstatSync(join(fullPath, path), { throwIfNoEntry: false });
+      if (!stats) {
+        s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
+        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128  / 255})`;
+      } else if (stats.isSymbolicLink()) {
+        s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
+        s.backgroundColor = `rgba(${198 / 255}, ${255 / 255}, ${255 / 255})`;
+      } else if (stats.isDirectory()) {
+        s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
+        s.backgroundColor = `rgba(${232 / 255}, ${232 / 255}, ${255 / 255})`;
+      } else {
+        s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
+        s.backgroundColor = `rgba(${234 / 255}, ${221 / 255}, ${202 / 255})`;
+      }
+    } catch(ex) {
+        s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
+        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128  / 255})`;
+    }
 
     car.node().value().setBlockStyle(s);
     car.pull("d");
