@@ -48,7 +48,7 @@ const getContentRoot = () => {
   if (process.env.CONTENT_ROOT) {
     return process.env.CONTENT_ROOT;
   }
-  return '/'
+  return "/";
 };
 
 const { streamPath, servePath } = require("./script");
@@ -85,9 +85,9 @@ app.get(/\/raw\/?(.*)$/, (req, resp) => {
   const mainPath = getContentRoot();
   const subPath = req.url.substring("/raw/".length);
   resp.sendFile(path.join(mainPath, subPath), {
-    root: mainPath
-  })
-})
+    root: mainPath,
+  });
+});
 
 app.get(/\/events\/?(.*)$/, (req, resp) => {
   resp.writeHead(200, {

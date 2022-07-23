@@ -75,7 +75,7 @@ export default class ParsegraphStream {
   _carets: Map<number, BlockCaret>;
   _nodes: Map<number, PaintedNode>;
   _blocks: Map<number, Block>;
-  _embeds:Map<number, DOMContent>;
+  _embeds: Map<number, DOMContent>;
   _artists: Map<string, BlockArtist>;
   _palette: BlockPalette;
   _include: ParsegraphInclude;
@@ -337,7 +337,7 @@ export default class ParsegraphStream {
     if (html.startsWith("/")) {
       html = this.prefix() + "/raw/" + html;
     }
-    this._embeds.get(embedId)?.setCreator(()=>{
+    this._embeds.get(embedId)?.setCreator(() => {
       const cont = document.createElement("img");
       cont.src = html;
       return cont;
@@ -348,7 +348,7 @@ export default class ParsegraphStream {
     if (html.startsWith("/")) {
       html = this.prefix() + "/raw/" + html;
     }
-    const embed = new DOMContent(()=>{
+    const embed = new DOMContent(() => {
       const cont = document.createElement("img");
       cont.src = html;
       console.log(html);
@@ -356,7 +356,7 @@ export default class ParsegraphStream {
     });
     const n = this.getNode(nodeId);
     if (n) {
-      embed.setNode(n)
+      embed.setNode(n);
       n.setValue(embed);
     }
     this._embeds.set(embedId, embed);

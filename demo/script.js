@@ -41,7 +41,7 @@ const makeFile = (server, mainPath, subPath) => {
   ]).stdout.toString();
   car.label(fileType);
 
-  car.stream("d", subPath)
+  car.stream("d", subPath);
 
   return car.root();
 };
@@ -102,11 +102,11 @@ const streamPath = (mainPath, subPath) => {
   ]).stdout.toString();
 
   if (fileType.startsWith("PNG image data")) {
-    const car = server.state().newCaret("b")
-    car.label("PNG")
-    car.spawnMove('d', 'b')
-    car.embed(`${subPath}`)
-    server.state().setRoot(car.root())
+    const car = server.state().newCaret("b");
+    car.label("PNG");
+    car.spawnMove("d", "b");
+    car.embed(`${subPath}`);
+    server.state().setRoot(car.root());
     return server;
   }
 

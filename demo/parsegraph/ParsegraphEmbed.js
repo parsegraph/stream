@@ -6,12 +6,7 @@ class ParsegraphEmbed {
     this._id = id();
     this._node = node;
     this._html = html;
-    this.server().send(
-      "newEmbed",
-      this.id(),
-      this._node?.id(),
-      html,
-    );
+    this.server().send("newEmbed", this.id(), this._node?.id(), html);
   }
 
   id() {

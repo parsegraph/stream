@@ -5,7 +5,7 @@ const {
   reverseDirection,
 } = require("./direction");
 const { ParsegraphNode, Fit } = require("./ParsegraphNode");
-const { ParsegraphEmbed} = require("./ParsegraphEmbed");
+const { ParsegraphEmbed } = require("./ParsegraphEmbed");
 
 const { id } = require("./id");
 

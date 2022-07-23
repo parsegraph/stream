@@ -1,5 +1,5 @@
-import ParsegraphStream, {ParsegraphInclude} from "./ParsegraphStream";
+import ParsegraphStream, { ParsegraphInclude } from "./ParsegraphStream";
 
 export default ParsegraphStream;
 
-export {ParsegraphInclude}
+export { ParsegraphInclude };
