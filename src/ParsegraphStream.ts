@@ -18,6 +18,7 @@ import Direction, {
 import { ActionCarousel } from "parsegraph-carousel";
 import {PaintedNode, DOMContent} from 'parsegraph-artist';
 import { showInCamera } from 'parsegraph-showincamera';
+import parseRain from "./parseRain";
 
 export class ParsegraphInclude {
   _parent: ParsegraphStream;
@@ -129,17 +130,7 @@ export default class ParsegraphStream {
     fetch(url, options)
       .then((resp) => resp.text())
       .then((data) => {
-        let index = 0;
-        while (index < data.length) {
-          const nextLine = data.indexOf("\n", index);
-          const lineLenStr = data.substring(index, index + nextLine);
-          const lineLen = parseInt(lineLenStr);
-          index = nextLine;
-          const line = data.substring(index + 1, index + lineLen + 1);
-          const args = JSON.parse(line);
-          this.event(args.shift(), ...args);
-          index += lineLen + 2;
-        }
+        parseRain(data, this.event, this);
       });
   }
 
