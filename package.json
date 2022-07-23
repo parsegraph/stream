@@ -56,6 +56,7 @@
   "dependencies": {
     "esprima": "^4.0.1",
     "fast-xml-parser": "^4.0.8",
+    "parsegraph-anthonylisp": "^2.1.0",
     "parsegraph-artist": "^3.4.26",
     "parsegraph-block": "^4.4.19",
     "parsegraph-blockpainter": "^1.7.1",

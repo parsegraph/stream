@@ -4266,6 +4266,11 @@ parsegraph-animator@^1.5.8:
   resolved "https://registry.yarnpkg.com/parsegraph-animator/-/parsegraph-animator-1.5.8.tgz#2b5f988fe067f299d84c376116e2c60a205c3d52"
   integrity sha512-SIG7PCo63QgQ21hq1LVBjX9u6FGUMeu4BimFuXt25Elxf9WiWtzRRmYiPXoTceSGTHvtokvMM7pb26dpX5Hn/A==
 
+parsegraph-anthonylisp@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/parsegraph-anthonylisp/-/parsegraph-anthonylisp-2.1.0.tgz#d4f3fe7f957f87e3443b03607c1f08dbd63fa4ed"
+  integrity sha512-hgKYW5vtc6Tpah9JKhZUdVdY/F+OjuORuOriCi0VOaN1Tqeo/r/E6AdVMAxcKvPci3VPVWtAh/AmPRUipWeViw==
+
 parsegraph-artist@^3.4.26:
   version "3.4.26"
   resolved "https://registry.yarnpkg.com/parsegraph-artist/-/parsegraph-artist-3.4.26.tgz#2026ba8e08a5d614cd85c5e07c8bd52d52367a1e"
