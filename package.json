@@ -56,14 +56,14 @@
   "dependencies": {
     "esprima": "^4.0.1",
     "fast-xml-parser": "^4.0.8",
-    "parsegraph-artist": "^3.4.24",
-    "parsegraph-block": "^4.4.17",
+    "parsegraph-artist": "^3.4.26",
+    "parsegraph-block": "^4.4.19",
     "parsegraph-blockpainter": "^1.7.1",
-    "parsegraph-carousel": "^2.3.29",
+    "parsegraph-carousel": "^2.3.30",
     "parsegraph-color": "^1.4.7",
     "parsegraph-direction": "^2.1.0",
     "parsegraph-showincamera": "^1.7.4",
-    "parsegraph-viewport": "^2.7.0",
+    "parsegraph-viewport": "^2.7.1",
     "yaml": "^2.1.1"
   }
 }
