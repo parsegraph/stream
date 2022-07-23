@@ -16,8 +16,8 @@ import Direction, {
   readFit,
 } from "parsegraph-direction";
 import { ActionCarousel } from "parsegraph-carousel";
-import {PaintedNode, DOMContent} from 'parsegraph-artist';
-import { showInCamera } from 'parsegraph-showincamera';
+import { PaintedNode, DOMContent } from "parsegraph-artist";
+import { showInCamera } from "parsegraph-showincamera";
 import parseRain from "./parseRain";
 
 export class ParsegraphInclude {
