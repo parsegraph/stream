@@ -5,7 +5,26 @@ class ParsegraphServer {
   constructor(artist) {
     this._clients = [];
     this._messages = [];
+    this._callbacks = [];
     this._state = new ParsegraphServerState(this, artist);
+  }
+
+  scheduleUpdate() {
+    this.send("scheduleUpdate")
+  }
+
+  setCallbackUrl(url) {
+    this.send("setCallbackUrl", url)
+  }
+
+  addCallback(cb) {
+    this._callbacks.push(cb);
+    return this._callbacks.length - 1;
+  }
+
+  callback(callbackId) {
+    console.log("Making callback")
+    this._callbacks[callbackId]();
   }
 
   connect(writer) {

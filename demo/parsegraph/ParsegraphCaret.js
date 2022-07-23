@@ -19,6 +19,11 @@ class ParsegraphCaret {
     this.server().send("newCaret", this.id(), this.node().id());
   }
 
+  callback(cb) {
+    this.server().send("callback", this.node().id(),
+    this.server().addCallback(cb))
+  }
+
   action(path, data) {
     this.server().send("action", this.node().id(), path, data);
   }

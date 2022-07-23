@@ -73,6 +73,7 @@ app.get(/^\/parsegraph\/(.*)$/, (req, resp) => {
   console.log("EventSource", req.url, subPath);
   if (!streams[subPath]) {
     streams[subPath] = streamPath(mainPath, subPath);
+    streams[subPath].setCallbackUrl("/callback/" + subPath)
   }
   const stream = streams[subPath];
   const remover = stream.connect((...args) => {
@@ -100,6 +101,7 @@ app.get(/\/events\/?(.*)$/, (req, resp) => {
   console.log(subPath);
   if (!servers[subPath]) {
     servers[subPath] = servePath(mainPath, subPath);
+    servers[subPath].setCallbackUrl("/callback/" + subPath)
   }
   const server = servers[subPath];
   const remover = server.connect((...args) => {
@@ -116,6 +118,7 @@ app.get(/\/graph\/?(.*)$/, (req, resp) => {
   const subPath = req.url.substring("/graph/".length);
   if (!servers[subPath]) {
     servers[subPath] = servePath(mainPath, subPath);
+    servers[subPath].setCallbackUrl("/callback/" + subPath)
   }
   const server = servers[subPath];
   console.log("Serving", subPath);
@@ -127,6 +130,22 @@ app.get(/\/graph\/?(.*)$/, (req, resp) => {
     resp.write("\n");
   });
   resp.end();
+});
+
+app.post(/\/callback\/?(.*)$/, bodyParser.json({strict:false}), (req, resp) => {
+  const subPath = req.url.substring("/callback/".length);
+  if (!streams[subPath]) {
+    resp.status(404).end();
+    return;
+  }
+  const stream = streams[subPath];
+  try {
+    stream.callback(parseInt(req.body))
+    resp.end();
+  } catch(ex) {
+    console.log(ex)
+    resp.status(500).end();
+  }
 });
 
 app.use(root, express.static("../dist"));

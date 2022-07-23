@@ -307,6 +307,30 @@ export default class ParsegraphStream {
       });
   }
 
+  setCallbackUrl(path: string) {
+    this._callbackUrl = path
+  }
+
+  _callbackUrl:string;
+
+  callback(nodeId: number, callbackId: number) {
+    const n = this.getNode(nodeId);
+    n.value()
+      .interact()
+      .setClickListener(() => {
+        if (this._callbackUrl) {
+          fetch(this._callbackUrl, {
+            method: 'POST',
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: "" + callbackId
+          });
+        }
+        return true;
+      });
+  }
+
   getCarousel() {
     return this.viewport().carousel();
   }
