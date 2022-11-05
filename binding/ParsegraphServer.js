@@ -19,11 +19,17 @@ class ParsegraphServer {
 
   addCallback(cb) {
     this._callbacks.push(cb);
-    return this._callbacks.length - 1;
+    const callbackId = this._callbacks.length - 1;
+    console.log("Added callback", callbackId)
+    return callbackId;
   }
 
-  callback(callbackId) {
-    this._callbacks[callbackId]();
+  callback(callbackId, val) {
+    if (!this._callbacks[callbackId]) {
+      console.log(`No callback with id ${callbackId}`)
+      return;
+    }
+    this._callbacks[callbackId](val);
   }
 
   connect(writer) {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>stream</title>
+  <title>Parsegraph</title>
   <style>
       body {
           margin: 0;
@@ -17,11 +17,70 @@
   </style>
 <script src="./parsegraph-log.js"></script>
 <script src="./parsegraph-checkglerror.js"></script>
+<script src="./parsegraph-viewport.js"></script>
 </head>
 <body>
     <div style="width: 100vw; height: 100vh">
         <div style="width: 100%; height: 100%" id="parsegraph"></div>
     </div>
-    <script src="./renderer.js"></script>
+    <script src="./parsegraph-stream.js"></script>
+    <script>
+
+document.addEventListener("DOMContentLoaded", () => {
+  /*parsegraph_log.setLogger(new parsegraph_log.CallbackTreeLog((msg)=>{
+    window.electronAPI.parsegraphLog(msg);
+  }));
+  parsegraph_log.enableLogging();*/
+
+  const topElem = document.getElementById("parsegraph");
+  topElem.style.position = "relative";
+  const viewport = new parsegraph_viewport.default(null);
+  const mainStream = new parsegraph_stream.default(viewport);
+
+  mainStream.onSplice((val, offset, len, subPath)=>{
+    console.log(val, offset, len, subPath)
+    return new Promise((resolve)=>{
+      window.electronAPI.parsegraphSplice(val, offset, len, subPath)
+        console.log("Splicing subpath", subPath)
+      window.electronAPI.parsegraph(subPath, (eventName, ...args)=>{
+          if (eventName === "spliceComplete") {
+                console.log("spliceComplete")
+              window.electronAPI.parsegraph(subPath)
+              resolve();
+          }
+      });
+    })
+  })
+
+
+  mainStream.onLink((url)=>{
+      document.title = `${url} - Parsegraph`
+      window.electronAPI.parsegraph(url, (...args)=>{
+        mainStream.event(...args)
+      });
+  });
+
+  mainStream.onStream((stream, url)=>{
+      window.electronAPI.parsegraphStream(url, (...args)=>{
+        stream.event(...args)
+      });
+  });
+
+  mainStream.setCallbackHandler((callbackUrl, callbackId, val)=>{
+      window.electronAPI.parsegraphCallback(callbackUrl, callbackId, val)
+      return new Promise((resolve)=>{
+
+      })
+  })
+
+  window.electronAPI.parsegraph('/', (...args)=>{
+    mainStream.event(...args)
+  });
+
+  parsegraph_viewport.render(topElem, viewport);
+})
+
+    </script>
 </body>
 </html>
+<!-- vim: set ts=2 sw=2 et :-->

@@ -1,15 +1,13 @@
+const { ParsegraphServer } = require("./parsegraph");
 const { readdirSync } = require("fs");
 const { spawnSync } = require("child_process");
-const {
-  ParsegraphServer,
-  LispGraph,
-  XMLGraph,
-  JSONGraph,
-  YAMLGraph,
-  ECMAScriptGraph,
-} = require("../binding");
-const vm = require("node:vm");
-const Reconciler = require("./reconciler");
+
+const { LispGraph } = require("./parsegraph/lisp");
+const { XMLGraph } = require("./parsegraph/xml");
+const { JSONGraph } = require("./parsegraph/json");
+const { YAMLGraph } = require("./parsegraph/yaml");
+const { RainGraph } = require("./parsegraph/rain");
+const { ECMAScriptGraph } = require("./parsegraph/ecmascript");
 
 const makeTimer = (server) => {
   const car = server.state().newCaret("u");
@@ -25,7 +23,10 @@ const { join } = require("path");
 const makeFile = (server, mainPath, subPath) => {
   const car = server.state().newCaret("u");
   const fullPath = join(mainPath, subPath);
-  car.link(join(subPath, ".."));
+  if (!subPath.endsWith("/")) {
+    subPath += "/";
+  }
+  car.link(subPath + "..");
   car.spawnMove("d", "b");
 
   const stats = statSync(fullPath, { throwIfNoEntry: false });
@@ -82,7 +83,7 @@ const makeTree = (server, mainPath, subPath) => {
       const stats = lstatSync(join(fullPath, path), { throwIfNoEntry: false });
       if (!stats) {
         s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
-        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128 / 255})`;
+        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128  / 255})`;
       } else if (stats.isSymbolicLink()) {
         s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
         s.backgroundColor = `rgba(${198 / 255}, ${255 / 255}, ${255 / 255})`;
@@ -93,9 +94,9 @@ const makeTree = (server, mainPath, subPath) => {
         s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
         s.backgroundColor = `rgba(${234 / 255}, ${221 / 255}, ${202 / 255})`;
       }
-    } catch (ex) {
-      s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
-      s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128 / 255})`;
+    } catch(ex) {
+        s.borderColor = "rgba(0.4, 0.4, 0.4, 0.6)";
+        s.backgroundColor = `rgba(${255 / 255}, ${128 / 255}, ${128  / 255})`;
     }
 
     car.node().value().setBlockStyle(s);
@@ -110,19 +111,13 @@ const makeTree = (server, mainPath, subPath) => {
 const streamPath = (mainPath, subPath) => {
   const server = new ParsegraphServer();
 
-  console.log("subpath", subPath);
-  const fullPath = subPath ? join(mainPath, subPath) : mainPath;
-  //const stats = statSync(fullPath, { throwIfNoEntry: false });
+  const fullPath = join(mainPath, subPath);
+  const stats = statSync(fullPath, { throwIfNoEntry: false });
 
   const fileType = spawnSync("/usr/bin/file", [
     "-b",
     fullPath,
-  ]).stdout.toString().trim();
-  console.log(fileType, fileType.trim() === "directory")
-
-  if (fileType === "directory") {
-    return servePath(mainPath, subPath)
-  }
+  ]).stdout.toString();
 
   if (fileType.startsWith("PNG image data")) {
     const car = server.state().newCaret("b");
@@ -133,75 +128,23 @@ const streamPath = (mainPath, subPath) => {
     return server;
   }
 
-  const JS_EXTENSIONS = [".js", ".jsx", ".tsx", ".ts"]
-
-  if (fullPath.endsWith(".parsegraph") || JS_EXTENSIONS.some(ext=>fullPath.endsWith(".parsegraph" + ext))) {
-    const options = {
-      filename: fullPath,
-      presets: [
-        ["@babel/env", { modules: "auto" }],
-        "@babel/typescript",
-        "@babel/react",
-      ],
-    };
-    const result = require("@babel/core").transformSync(
-      readFileSync(fullPath),
-      options
-    );
-    console.log(result.code);
-    const func = vm.runInThisContext(
-      [
-        "(function (exports, require, module, __filename, __dirname) { ",
-        result.code,
-        "});",
-      ].join("\n"),
-      {
-        filename: fullPath,
-        liveOffset: 1,
-      }
-    );
-    console.log(func);
-    const mod = { exports: {} };
-    func(
-      mod.exports,
-      (name) => {
-        console.log(name);
-        if (name.startsWith(".")) {
-          return require(fullPath + name);
-        } else {
-          return require(name);
-        }
-      },
-      mod,
-      fullPath,
-      mainPath + subPath
-    );
-    console.log(mod.exports);
-    const out =
-      typeof mod.exports === "function" ? mod.exports : mod.exports.default;
-    console.log(out);
-
-    const container = Reconciler.createContainer(server, 0, false, null);
-    Reconciler.updateContainer(out(), container, null, () => {
-      console.log("Reconciled");
-    });
-    return server;
-  }
-
-  if (JS_EXTENSIONS.some(ext=>fullPath.endsWith(ext))) {
-    const car = server.state().newCaret("b");
-    require("@babel/core");
-    car.label("Babel");
-    car.spawnMove("d", "b");
-    server.state().setRoot(car.root());
-    return server;
-  }
-
   let graph;
   if (fullPath.endsWith(".json") || fileType.includes("JSON")) {
     graph = new JSONGraph(server);
+  } else if (
+    fullPath.endsWith(".js") ||
+    fullPath.endsWith(".ts") ||
+    fileType.includes("Java")
+  ) {
+    graph = new ECMAScriptGraph(server);
   } else if (fullPath.endsWith(".yml") || fileType.includes("YAML")) {
     graph = new YAMLGraph(server);
+  } else if (
+    fullPath.endsWith(".rain") ||
+    fullPath.endsWith(".parsegraph") ||
+    fileType.endsWith(".rainback")
+  ) {
+    graph = new RainGraph(server);
   } else if (
     fullPath.endsWith(".xml") ||
     fullPath.endsWith(".html") ||
@@ -211,11 +154,7 @@ const streamPath = (mainPath, subPath) => {
   } else {
     graph = new LispGraph(server);
   }
-  graph.parse(readFileSync(fullPath).toString(), subPath);
-
-  graph.onUpdate(() => {
-    //server.state().setRoot(graph.root());
-  });
+  graph.parse(readFileSync(fullPath).toString());
 
   server.state().setRoot(graph.root());
 

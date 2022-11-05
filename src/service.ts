@@ -6,8 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   topElem.style.position = "relative";
   const viewport = new Navport(null);
   const stream = new ParsegraphStream(viewport);
-  //const refresh = () => stream.populate(window.location.pathname);
-  const refresh = () => stream.startStream(stream, window.location.pathname);
+  const refresh = () => stream.populate("./service" + window.location.search);
   window.addEventListener("popstate", refresh);
   refresh();
   render(topElem, viewport);

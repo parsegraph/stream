@@ -1,8 +1,13 @@
 // main.js
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
+const { streamPath, servePath } = require("../demo/script");
+
+const { readFileSync, writeFileSync } = require("fs")
+
+const net = require("net")
 
 const createWindow = () => {
   // Create the browser window.
@@ -19,6 +24,61 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools()
+
+  const logSocket = net.connect(28122, "localhost", ()=>{
+    ipcMain.on('parsegraph-log', (_, text)=>{
+      logSocket.write(text + "\r\n")
+    })
+  })
+
+  const streamRoot = process.env.SITE_ROOT || process.cwd()
+
+  ipcMain.on('parsegraph-splice', (_, text, index, count, subPath)=>{
+    try {
+      const filePath = path.join(streamRoot, subPath);
+      const str = readFileSync(filePath).toString();
+      if (isNaN(index) || isNaN(count)) {
+        return;
+      }
+      writeFileSync(
+        filePath,
+        str.slice(0, index) + (text || "") + str.slice(index + count)
+      );
+      mainWindow.webContents.send('parsegraph', subPath, "spliceComplete")
+    } catch (ex) {
+      console.log(ex);
+    }
+  })
+
+  const streams = {}
+  ipcMain.on('parsegraph-callback', (_, callbackUrl, callbackId, val)=>{
+    const stream = streams[callbackUrl]
+    if (!stream) {
+      console.log("Unhandled callback", callbackUrl)
+      return;
+    }
+    stream.callback(callbackId, val)
+  })
+
+  ipcMain.on('parsegraph-start', (_, url)=>{
+    console.log("START ", url)
+    const stream = servePath(streamRoot, url)
+    stream.setCallbackUrl(url)
+    stream.connect((...args)=>{
+      //console.log("Parsegraph stream", ...args)
+      mainWindow.webContents.send('parsegraph', url, ...args)
+    });
+  })
+
+  ipcMain.on('parsegraph-stream', (_, url)=>{
+    console.log("CONNECTED TO", url)
+    const stream = streamPath(streamRoot, url)
+    stream.setCallbackUrl(url)
+    streams[url] = stream
+    stream.connect((...args)=>{
+      mainWindow.webContents.send('parsegraph-stream-event', url, ...args)
+    });
+  })
 }
 
 // This method will be called when Electron has finished

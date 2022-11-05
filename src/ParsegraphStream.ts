@@ -11,6 +11,7 @@ import Block, {
 import { BlockType } from "parsegraph-blockpainter";
 import Navport from "parsegraph-viewport";
 import Direction, {
+  readAlignment,
   readDirection,
   readPreferredAxis,
   readFit,
@@ -19,6 +20,21 @@ import { ActionCarousel } from "parsegraph-carousel";
 import { PaintedNode, DOMContent } from "parsegraph-artist";
 import { showInCamera } from "parsegraph-showincamera";
 import parseRain from "./parseRain";
+import { DOMContentArtist } from "parsegraph-artist";
+
+const domArtist = new DOMContentArtist();
+
+type Splicer = (
+  val: string,
+  offset: number,
+  len: number,
+  subPath: string
+) => Promise<any>;
+type CallbackHandler = (
+  callbackUrl: string,
+  callbackId: number,
+  val?: any
+) => Promise<any>;
 
 export class ParsegraphInclude {
   _parent: ParsegraphStream;
@@ -76,11 +92,14 @@ export default class ParsegraphStream {
   _carets: Map<number, BlockCaret>;
   _nodes: Map<number, PaintedNode>;
   _blocks: Map<number, Block>;
+  _domContents: Map<number, DOMContent>;
   _embeds: Map<number, DOMContent>;
   _artists: Map<string, BlockArtist>;
   _palette: BlockPalette;
   _include: ParsegraphInclude;
   _prefix: string;
+  _onLink: (url: string, options?: any) => void;
+  _onStream: (stream: ParsegraphStream, url: string) => void;
 
   _es: EventSource;
 
@@ -96,11 +115,14 @@ export default class ParsegraphStream {
     this._carets = new Map();
     this._nodes = new Map();
     this._blocks = new Map();
+    this._domContents = new Map();
     this._embeds = new Map();
     this._artists = new Map();
     this._fallbackArtist = fallbackArtist;
     this._include = null;
     this._prefix = "";
+    this._onLink = null;
+    this._onStream = null;
   }
 
   setParent(include: ParsegraphInclude) {
@@ -131,20 +153,6 @@ export default class ParsegraphStream {
       .then((data) => {
         parseRain(data, this.event, this);
       });
-  }
-
-  start(url: string) {
-    if (this._es) {
-      this.stop();
-    }
-    if (url.startsWith("/")) {
-      url = this.prefix() + "/parsegraph/" + url;
-    }
-    this._es = new EventSource(url);
-    this._es.onmessage = (event) => {
-      const args = JSON.parse(event.data);
-      this.event(args.shift(), ...args);
-    };
   }
 
   stop() {
@@ -212,6 +220,10 @@ export default class ParsegraphStream {
     return this._blocks.has(id);
   }
 
+  hasDomContent(id: number) {
+    return this._domContents.has(id);
+  }
+
   getNode(nodeId: number) {
     if (!nodeId) {
       return null;
@@ -230,6 +242,16 @@ export default class ParsegraphStream {
       throw new Error("No block for ID");
     }
     return this._blocks.get(blockId);
+  }
+
+  getDomContent(domId: number) {
+    if (!domId) {
+      return null;
+    }
+    if (!this.hasDomContent(domId)) {
+      throw new Error("No DOM content for ID: " + domId);
+    }
+    return this._domContents.get(domId);
   }
 
   newCaret(caretId: number, nodeId: number) {
@@ -269,6 +291,10 @@ export default class ParsegraphStream {
     return this._include;
   }
 
+  onLink(callback: (url: string, options?: any) => void) {
+    this._onLink = callback;
+  }
+
   link(nodeId: number, url: string, options?: any) {
     this.getNode(nodeId)
       .value()
@@ -279,7 +305,11 @@ export default class ParsegraphStream {
           par = par.getInclude().parent() || par;
         }
         history.pushState({}, "", url);
-        par.populate(url, options);
+        if (this._onLink) {
+          this._onLink(url, options);
+        } else {
+          par.populate(url, options);
+        }
         return false;
       });
   }
@@ -294,26 +324,69 @@ export default class ParsegraphStream {
       });
   }
 
+  setNodeAlignmentMode(
+    nodeId: number,
+    inDirection: string,
+    newAlignmentMode: string
+  ) {
+    this.getNode(nodeId)?.setNodeAlignmentMode(
+      readDirection(inDirection),
+      readAlignment(newAlignmentMode)
+    );
+  }
+
   setCallbackUrl(path: string) {
     this._callbackUrl = path;
   }
 
   _callbackUrl: string;
 
-  callback(nodeId: number, callbackId: number) {
+  _callbackHandler: CallbackHandler;
+
+  setCallbackHandler(cb: CallbackHandler) {
+    this._callbackHandler = cb;
+  }
+
+  getCallbackHandler(): CallbackHandler {
+    if (!this._callbackHandler) {
+      if (this.isIncluded()) {
+        return this._include.parent().getCallbackHandler();
+      }
+    }
+    if (this._callbackHandler) {
+      return this._callbackHandler;
+    }
+    if (this._callbackUrl) {
+      return (callbackUrl: string, callbackId: number, val?: any) => {
+        return fetch(callbackUrl + "?cb=" + callbackId, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(val),
+        });
+      };
+    }
+    return async (callbackUrl: string, callbackId: number, val?: any) => {
+      console.log("Unhandled callback", callbackUrl, callbackId, val);
+    };
+  }
+
+  makeCallback(callbackId: number, val?: any) {
+    const callbackHandler = this.getCallbackHandler();
+    return callbackHandler(this._callbackUrl, callbackId, val);
+  }
+
+  disconnectNode(nodeId: number, inDirection: string) {
+    this.getNode(nodeId)?.disconnectNode(readDirection(inDirection));
+  }
+
+  setClickListener(nodeId: number, callbackId: number, val?: any) {
     const n = this.getNode(nodeId);
     n.value()
       .interact()
       .setClickListener(() => {
-        if (this._callbackUrl) {
-          fetch(this._callbackUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: "" + callbackId,
-          });
-        }
+        this.makeCallback(callbackId, val);
         return true;
       });
   }
@@ -332,6 +405,123 @@ export default class ParsegraphStream {
     });
     const n = this.getNode(nodeId);
     ac.install(n);
+  }
+
+  spliceComplete(): void {}
+
+  onSplice(cb: Splicer): void {
+    this._splicer = cb;
+  }
+
+  getSplicer(): Splicer {
+    if (this._splicer) {
+      return this._splicer;
+    }
+    if (this.isIncluded()) {
+      return this._include.parent().getSplicer();
+    }
+    return (val, offset, len, subPath) => {
+      return fetch(`/splice/${subPath}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          val: val,
+          offset,
+          len,
+        }),
+      });
+    };
+  }
+
+  _splicer: Splicer;
+
+  textEdit(nodeId: number, val: string, callbackId: number) {
+    const n = this.getNode(nodeId);
+    const block = n.value();
+    block.setLabel(val);
+    const edit = new DOMContent(() => {
+      console.log("Creating edit", val);
+      const c = document.createElement("input");
+      c.style.pointerEvents = "all";
+      c.value = val;
+      c.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          n.setValue(block);
+          block.setNode(n);
+          const p = this.makeCallback(callbackId, c.value);
+          p.then(() => {
+            console.log("Refreshing");
+            // window.location.href = window.location.href;
+            this.viewport()._painter.dispose();
+            this.viewport().scheduleRepaint();
+          });
+        }
+      });
+      return c;
+    });
+    edit.setArtist(domArtist);
+
+    const install = () => {
+      n.value()
+        .interact()
+        .setClickListener(() => {
+          edit.setNode(n);
+          n.setValue(edit);
+          this.viewport()._painter.dispose();
+          this.viewport().scheduleRepaint();
+        });
+    };
+    install();
+    return val;
+  }
+
+  textSplice(
+    nodeId: number,
+    val: string,
+    offset: number,
+    len: number,
+    subPath: string
+  ) {
+    const n = this.getNode(nodeId);
+    const block = n.value();
+    const edit = new DOMContent(() => {
+      console.log("Creating edit", val);
+      const c = document.createElement("input");
+      c.style.pointerEvents = "all";
+      c.value = val;
+      c.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const p = this.getSplicer()(c.value, offset, len, subPath);
+          p.then(() => {
+            console.log("Refreshing");
+            n.setValue(block);
+            block.setNode(n);
+            // window.location.href = window.location.href;
+            this.viewport()._painter.dispose();
+            this.viewport().scheduleRepaint();
+          });
+        }
+      });
+      return c;
+    });
+    edit.setArtist(domArtist);
+
+    const install = () => {
+      n.value()
+        .interact()
+        .setClickListener(() => {
+          edit.setNode(n);
+          n.setValue(edit);
+          this.viewport()._painter.dispose();
+          this.viewport().scheduleRepaint();
+        });
+    };
+    install();
+    return val;
   }
 
   parseColor(val: string) {
@@ -360,8 +550,15 @@ export default class ParsegraphStream {
       html = this.prefix() + "/raw/" + html;
     }
     const embed = new DOMContent(() => {
-      const cont = document.createElement("img");
-      cont.src = html;
+      const cont = document.createElement("iframe");
+      cont.src = "about:blank";
+      setTimeout(() => {
+        const doc = cont.contentDocument;
+        doc.open();
+        doc.write(html);
+        doc.close();
+        return cont;
+      }, 0);
       return cont;
     });
     const n = this.getNode(nodeId);
@@ -386,6 +583,20 @@ export default class ParsegraphStream {
     );
     this._blocks.set(blockId, block);
     return block;
+  }
+
+  newDomContent(domId: number, nodeId: number, initialContent: string) {
+    const val = new DOMContent(() => {
+      const c = document.createElement("div");
+      c.innerHTML = initialContent;
+      return c;
+    });
+    val.setArtist(domArtist);
+    if (this.getNode(nodeId)) {
+      this.getNode(nodeId).setValue(val);
+    }
+    this._domContents.set(domId, val);
+    return val;
   }
 
   setNodeFit(blockId: number, fit: string) {
@@ -436,13 +647,47 @@ export default class ParsegraphStream {
     return include;
   }
 
+  startStream(stream: ParsegraphStream, url: string) {
+    if (this._onStream) {
+      this._onStream(stream, url);
+      return;
+    }
+    if (this.isIncluded()) {
+      this._include.parent().startStream(stream, url);
+      return;
+    }
+    if (this._es) {
+      this.stop();
+    }
+    if (url.startsWith("/")) {
+      url = this.prefix() + "/parsegraph" + url;
+    }
+    this._es = new EventSource(url);
+    this._es.onmessage = (event) => {
+      const args = JSON.parse(event.data);
+      this.event(args.shift(), ...args);
+    };
+  }
+
+  onStream(cb: (stream: ParsegraphStream, url: string) => void) {
+    this._onStream = cb;
+  }
+
   stream(nodeId: number, dir: string, url: string) {
     const n = this.getNode(nodeId);
     if (!n) {
       throw new Error("No node found");
     }
     const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
-    include.child().start(url);
+    this.startStream(include.child(), url);
     return include;
+  }
+
+  scheduleUpdate() {
+    if (this.isIncluded()) {
+      this._include.parent().scheduleUpdate();
+      return;
+    }
+    this.viewport().scheduleRepaint();
   }
 }

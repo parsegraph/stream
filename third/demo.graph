@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+const { ParsegraphServer } = require("./parsegraph");
+
+const server = new ParsegraphServer();
+const car = server.state().newCaret("u");
+
+car.callback(()=>{
+  car.spawnMove('f', 'b')
+  server.scheduleUpdate();
+})
+car.spawn("b", "u");
+car.spawnMove('d', 'b')
+setInterval(()=>{
+  car.label(new Date().toString())
+  server.scheduleUpdate();
+}, 1000);
+server.state().setRoot(car.root());
+
+const w = console.log
+server.forEach((...args) => {
+  const line = JSON.stringify(args);
+  w(line.length);
+  w(line);
+});
+
+module.exports = server;
