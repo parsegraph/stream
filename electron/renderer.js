@@ -1,1 +1,1 @@
-../dist/src/demo.js
+../dist-prod/src/demo.js

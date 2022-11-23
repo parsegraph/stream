@@ -9,6 +9,8 @@ const { ParsegraphEmbed } = require("./ParsegraphEmbed");
 
 const { id } = require("./id");
 
+const SHRINK_SCALE = 0.85;
+
 class ParsegraphCaret {
   constructor(server, given, palette) {
     this._server = server;
@@ -196,6 +198,10 @@ class ParsegraphCaret {
     node.include(readDirection(dir), url);
   }
 
+  overlay(overlay) {
+    this.server().send("overlay", this.node().id(), overlay)
+  }
+
   embed(...args) {
     let node = this.node();
     let val;
@@ -217,6 +223,27 @@ class ParsegraphCaret {
   crease() {
     this.server().send("crease", this.node().id());
   }
+
+  shrink(inDirection) {
+    let node = this.node();
+    if (arguments.length > 0) {
+      node = node.nodeAt(readDirection(inDirection));
+    }
+    if (node) {
+      node.setScale(SHRINK_SCALE);
+    }
+  }
+
+  grow(inDirection) {
+    let node = this.node();
+    if (arguments.length > 0) {
+      node = node.nodeAt(readDirection(inDirection));
+    }
+    if (node) {
+      node.setScale(1.0);
+    }
+  }
+
 }
 
 module.exports = { ParsegraphCaret };

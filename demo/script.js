@@ -1,4 +1,5 @@
-const { readdirSync } = require("fs");
+const { readdirSync, fstat, readFile } = require("fs");
+const path = require('path')
 const { spawnSync } = require("child_process");
 const {
   ParsegraphServer,
@@ -10,6 +11,12 @@ const {
 } = require("../binding");
 const vm = require("node:vm");
 const Reconciler = require("./reconciler");
+const {
+  parseTokens,
+  tokenize,
+  LispCell,
+  LispType,
+} = require("parsegraph-anthonylisp");
 
 const makeTimer = (server) => {
   const car = server.state().newCaret("u");
@@ -21,8 +28,9 @@ const makeTimer = (server) => {
 
 const { lstatSync, statSync, readFileSync, watch } = require("fs");
 const { join } = require("path");
+const ts = require("typescript");
 
-const makeFile = (server, mainPath, subPath) => {
+const serveFile = (server, mainPath, subPath) => {
   const car = server.state().newCaret("u");
   const fullPath = join(mainPath, subPath);
   car.link(join(subPath, ".."));
@@ -101,128 +109,203 @@ const makeTree = (server, mainPath, subPath) => {
     car.node().value().setBlockStyle(s);
     car.pull("d");
     car.label(path);
-    car.link(join(subPath, path));
+    car.include('d', join(subPath, path));
     car.pop();
   });
   return car.root();
 };
 
-const streamPath = (mainPath, subPath) => {
-  const server = new ParsegraphServer();
-
-  console.log("subpath", subPath);
-  const fullPath = subPath ? join(mainPath, subPath) : mainPath;
-  //const stats = statSync(fullPath, { throwIfNoEntry: false });
-
-  const fileType = spawnSync("/usr/bin/file", [
-    "-b",
+const reactParsegraph = async (server, content, fullPath, props)=>{
+  const options = {
+    filename: fullPath,
+    presets: [
+      ["@babel/env", { modules: "auto" }],
+      "@babel/typescript",
+      "@babel/react",
+    ],
+  };
+  const result = require("@babel/core").transformSync(
+    content,
+    options
+  );
+  const func = vm.runInThisContext(
+    [
+      "(function (exports, require, module, __filename, __dirname) { ",
+      result.code,
+      "});",
+    ].join("\n"),
+    {
+      filename: fullPath,
+      liveOffset: 1,
+    }
+  );
+  console.log("Module run")
+  const mod = { exports: {} };
+  func(
+    mod.exports,
+    (name) => {
+      if (name.startsWith(".")) {
+        return require(fullPath + name);
+      } else {
+        return require(name);
+      }
+    },
+    mod,
     fullPath,
-  ]).stdout.toString().trim();
-  console.log(fileType, fileType.trim() === "directory")
+    fullPath,
+  );
+  const out =
+    typeof mod.exports === "function" ? mod.exports : mod.exports.default;
 
+  if (!out) {
+    return;
+  }
+
+  await renderReactParsegraph(server, out, props);
+}
+
+const renderReactParsegraph = (server, out, props) => {
+  return new Promise((resolve)=>{
+    console.log("Creating container")
+    const container = Reconciler.createContainer(server, 0, false, null);
+    console.log("Updating container")
+    const view = out(props);
+    console.log("Got JSX", view)
+    Reconciler.updateContainer(view, container, null, () => {
+      resolve();
+    });
+    console.log("Updating container");
+  });
+}
+
+const buildStreamPath = async (server, mainPath, subPath) => {
+  const fullPath = path.join(mainPath, subPath)
+  const fileType = spawnSync("/usr/bin/file", ["-b", fullPath])
+    .stdout.toString()
+    .trim();
+  console.log(fileType)
   if (fileType === "directory") {
-    return servePath(mainPath, subPath)
+    return servePath(mainPath, subPath);
   }
 
   if (fileType.startsWith("PNG image data")) {
     const car = server.state().newCaret("b");
     car.label("PNG");
     car.spawnMove("d", "b");
-    car.embed(`${subPath}`);
+    car.embed(`${fullPath}`);
     server.state().setRoot(car.root());
-    return server;
+    return;
   }
 
-  const JS_EXTENSIONS = [".js", ".jsx", ".tsx", ".ts"]
+  const TS_EXTENSIONS = [".tsx", ".ts"];
+  const JS_EXTENSIONS = [".js", ".jsx"];
 
-  if (fullPath.endsWith(".parsegraph") || JS_EXTENSIONS.some(ext=>fullPath.endsWith(".parsegraph" + ext))) {
-    const options = {
-      filename: fullPath,
-      presets: [
-        ["@babel/env", { modules: "auto" }],
-        "@babel/typescript",
-        "@babel/react",
-      ],
-    };
-    const result = require("@babel/core").transformSync(
-      readFileSync(fullPath),
-      options
-    );
-    console.log(result.code);
-    const func = vm.runInThisContext(
-      [
-        "(function (exports, require, module, __filename, __dirname) { ",
-        result.code,
-        "});",
-      ].join("\n"),
-      {
-        filename: fullPath,
-        liveOffset: 1,
+  if (
+    fullPath.endsWith(".parsegraph") ||
+    JS_EXTENSIONS.some((ext) => fullPath.endsWith(".parsegraph" + ext)) ||
+    TS_EXTENSIONS.some((ext) => fullPath.endsWith(".parsegraph" + ext))
+  ) {
+    const refresh = async ()=>{
+      try {
+        await reactParsegraph(server, readFileSync(fullPath), fullPath)
+      } catch (ex) {
+        console.log(ex);
       }
-    );
-    console.log(func);
-    const mod = { exports: {} };
-    func(
-      mod.exports,
-      (name) => {
-        console.log(name);
-        if (name.startsWith(".")) {
-          return require(fullPath + name);
-        } else {
-          return require(name);
-        }
-      },
-      mod,
-      fullPath,
-      mainPath + subPath
-    );
-    console.log(mod.exports);
-    const out =
-      typeof mod.exports === "function" ? mod.exports : mod.exports.default;
-    console.log(out);
-
-    const container = Reconciler.createContainer(server, 0, false, null);
-    Reconciler.updateContainer(out(), container, null, () => {
-      console.log("Reconciled");
-    });
-    return server;
+    }
+    watch(fullPath, null, refresh);
+    await refresh();
+    return;
   }
 
-  if (JS_EXTENSIONS.some(ext=>fullPath.endsWith(ext))) {
-    const car = server.state().newCaret("b");
-    require("@babel/core");
-    car.label("Babel");
-    car.spawnMove("d", "b");
-    server.state().setRoot(car.root());
-    return server;
+  if (fullPath.endsWith(".yml") || fileType.includes("YAML")) {
+    const graph = new YAMLGraph(server);
+    graph.parse(readFileSync(fullPath).toString(), subPath);
+    server.state().setRoot(graph.root());
+    return;
   }
 
-  let graph;
-  if (fullPath.endsWith(".json") || fileType.includes("JSON")) {
-    graph = new JSONGraph(server);
-  } else if (fullPath.endsWith(".yml") || fileType.includes("YAML")) {
-    graph = new YAMLGraph(server);
-  } else if (
+  if (
     fullPath.endsWith(".xml") ||
     fullPath.endsWith(".html") ||
     fileType.includes("XML 1.0 document")
   ) {
-    graph = new XMLGraph(server);
-  } else {
-    graph = new LispGraph(server);
+    const graph = new XMLGraph(server);
+    graph.parse(readFileSync(fullPath).toString(), subPath);
+    server.state().setRoot(graph.root());
+    return;
   }
-  graph.parse(readFileSync(fullPath).toString(), subPath);
 
-  graph.onUpdate(() => {
-    //server.state().setRoot(graph.root());
-  });
+  const parseType = async (parseType)=>{
+    const parser = __dirname + `/../parser/${parseType}.jsx`
+    const refresh = async ()=>{
+      try {
+        console.log("Reacting parsegraph");
+        await reactParsegraph(server, readFileSync(parser), fullPath, {
+          content:readFileSync(fullPath),
+          name:fullPath})
+          console.log("Parsegraph reacted");
+      } catch (ex) {
+        console.log("Exception during parse", ex);
+      }
+    }
+    watch(parser, null, refresh);
+    watch(fullPath, null, refresh);
+    await refresh();
+    return;
+  }
 
-  server.state().setRoot(graph.root());
+  if (TS_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
+    const car = server.state().newCaret("b");
 
+    const program = require("typescript").createProgram([fullPath], { allowJs: true, jsx: 'preserve'});
+    const ast = program.getSourceFile(fullPath);
+    console.log(ast);
+
+    car.label("TypeScript");
+    car.spawnMove("d", "b");
+    server.state().setRoot(car.root());
+    return;
+  }
+
+  if (JS_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
+    const car = server.state().newCaret("b");
+    const ast = require("espree").parse(readFileSync(fullPath), { ecmaVersion: 'latest', sourceType: 'module', ecmaFeatures: {
+      jsx: true
+    } });
+    console.log(ast);
+    ast.body.forEach(node=>console.log(node))
+
+    car.label("Babel");
+    car.spawnMove("d", "b");
+    server.state().setRoot(car.root());
+    return;
+  }
+
+  if (fullPath.endsWith(".lisp") || fileType.includes('ASCII text')) {
+    await parseType("lisp")
+    return;
+  }
+
+  if (fullPath.endsWith(".json") || fileType.includes("JSON")) {
+    await parseType("json")
+    return;
+  }
+
+  // Fallback
+  const car = server.state().newCaret("b");
+  car.label(fileType);
+  car.spawnMove("d", "b");
+  server.state().setRoot(car.root());
+}
+
+const streamPath = async (mainPath, subPath) => {
+  const fullPath = subPath ? join(mainPath, subPath) : mainPath;
+  const server = new ParsegraphServer();
+  await buildStreamPath(server, mainPath, subPath);
   return server;
 };
 
-const servePath = (mainPath, subPath) => {
+const servePath = async (mainPath, subPath) => {
   const server = new ParsegraphServer();
   server.state().setBackgroundColor(64 / 255, 130 / 255, 109 / 255, 1);
 
@@ -231,7 +314,7 @@ const servePath = (mainPath, subPath) => {
   }
 
   const fullPath = join(mainPath, subPath);
-  const refresh = () => {
+  const refresh = async () => {
     const stats = statSync(fullPath, { throwIfNoEntry: false });
     if (!stats) {
       return;
@@ -239,12 +322,13 @@ const servePath = (mainPath, subPath) => {
     if (stats.isDirectory()) {
       server.state().setRoot(makeTree(server, mainPath, subPath));
     } else {
-      server.state().setRoot(makeFile(server, mainPath, subPath));
+      //server.state().setRoot(serveFile(server, mainPath, subPath));
+      await buildStreamPath(server, mainPath, subPath)
       //watch(fullPath, null, refresh);
     }
   };
 
-  refresh();
+  await refresh();
   return server;
 };
 

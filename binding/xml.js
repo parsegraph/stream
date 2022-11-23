@@ -27,7 +27,6 @@ class XMLGraph extends TreeNode {
         attributeNamePrefix: "@_",
       });
       const children = parser.parse(this._text);
-      console.log(children);
       this._tree.setValue(children);
       this._oldText = this._text;
     }

@@ -2,7 +2,6 @@ import Color from "parsegraph-color";
 import Block, {
   BlockPalette,
   BlockArtist,
-  BlockStyle,
   BlockCaret,
   BlockNode,
   DefaultBlockPalette,
@@ -19,8 +18,10 @@ import Direction, {
 import { ActionCarousel } from "parsegraph-carousel";
 import { PaintedNode, DOMContent } from "parsegraph-artist";
 import { showInCamera } from "parsegraph-showincamera";
-import parseRain from "./parseRain";
 import { DOMContentArtist } from "parsegraph-artist";
+import parseRain from "./parseRain";
+
+const MAX_DEPTH = 0;
 
 const domArtist = new DOMContentArtist();
 
@@ -81,7 +82,7 @@ export class ParsegraphInclude {
   }
 
   scheduleUpdate() {
-    this.parent().viewport().scheduleUpdate();
+    this.parent().viewport().scheduleRepaint();
   }
 }
 
@@ -99,9 +100,18 @@ export default class ParsegraphStream {
   _include: ParsegraphInclude;
   _prefix: string;
   _onLink: (url: string, options?: any) => void;
-  _onStream: (stream: ParsegraphStream, url: string) => void;
+  _onStream: (stream: ParsegraphStream, url: string, options?: any) => void;
 
   _es: EventSource;
+  _depth: number;
+
+  setDepth(depth: number) {
+    this._depth = depth;
+  }
+
+  depth() {
+    return this._depth;
+  }
 
   constructor(
     viewport: Navport,
@@ -123,10 +133,12 @@ export default class ParsegraphStream {
     this._prefix = "";
     this._onLink = null;
     this._onStream = null;
+    this._depth = 0;
   }
 
   setParent(include: ParsegraphInclude) {
     this._include = include;
+    this._depth = include.parent().depth() + 1;
   }
 
   setPrefix(prefix: string) {
@@ -395,6 +407,12 @@ export default class ParsegraphStream {
     return this.viewport().carousel();
   }
 
+  overlay(nodeId: number, url: string) {
+    this.getNode(nodeId).value().interact().setClickListener(()=>{
+      this.viewport().web().show(url);
+    })
+  }
+
   carousel(nodeId: number, actions: [string, string, string][]) {
     const ac = new ActionCarousel(this.getCarousel(), this.palette());
     actions.forEach((action) => {
@@ -546,19 +564,41 @@ export default class ParsegraphStream {
   }
 
   newEmbed(embedId: number, nodeId: number, html: string) {
-    if (html.startsWith("/")) {
-      html = this.prefix() + "/raw/" + html;
-    }
+    // <parsegraph dir="downward" embed="<body style='margin: 0; padding: 0'><iframe style='border: 0' src='/login'></iframe></body>"/>
     const embed = new DOMContent(() => {
       const cont = document.createElement("iframe");
-      cont.src = "about:blank";
-      setTimeout(() => {
-        const doc = cont.contentDocument;
-        doc.open();
-        doc.write(html);
-        doc.close();
-        return cont;
-      }, 0);
+      cont.style.pointerEvents = "all";
+      cont.style.border = "0";
+      cont.width = "0";
+      cont.height = "0";
+      cont.style.width = "0px";
+      cont.style.height = "0px";
+      if (html.startsWith("/")) {
+        cont.src = html;
+        setTimeout(() => {
+          (cont.contentWindow as any).parsegraphResize = (
+            w: number,
+            h: number
+          ) => {
+            console.log("Reported size", w, h);
+            embed.reportSize(w, h);
+            cont.width = `${w}`;
+            cont.height = `${h}`;
+            cont.style.width = `${w}px`;
+            cont.style.height = `${h}px`;
+            this.scheduleUpdate();
+          };
+        }, 0);
+      } else {
+        cont.src = "about:blank";
+        setTimeout(() => {
+          const doc = cont.contentDocument;
+          doc.open();
+          doc.write(html);
+          doc.close();
+          return cont;
+        }, 0);
+      }
       return cont;
     });
     const n = this.getNode(nodeId);
@@ -642,44 +682,50 @@ export default class ParsegraphStream {
     if (!n) {
       throw new Error("No node found");
     }
+    if (this.depth() > MAX_DEPTH) {
+      return;
+    }
     const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
     include.child().populate(url, options);
     return include;
   }
 
-  startStream(stream: ParsegraphStream, url: string) {
+  startStream(stream: ParsegraphStream, url: string, options?: any) {
     if (this._onStream) {
-      this._onStream(stream, url);
+      this._onStream(stream, url, options);
       return;
     }
     if (this.isIncluded()) {
-      this._include.parent().startStream(stream, url);
+      this._include.parent().startStream(stream, url, options);
       return;
     }
-    if (this._es) {
-      this.stop();
+    if (stream._es) {
+      stream.stop();
     }
     if (url.startsWith("/")) {
       url = this.prefix() + "/parsegraph" + url;
     }
-    this._es = new EventSource(url);
-    this._es.onmessage = (event) => {
+    stream._es = new EventSource(url, options);
+    stream._es.onmessage = (event) => {
       const args = JSON.parse(event.data);
-      this.event(args.shift(), ...args);
+      stream.event(args.shift(), ...args);
     };
   }
 
-  onStream(cb: (stream: ParsegraphStream, url: string) => void) {
+  onStream(cb: (stream: ParsegraphStream, url: string, options?: any) => void) {
     this._onStream = cb;
   }
 
-  stream(nodeId: number, dir: string, url: string) {
+  stream(nodeId: number, dir: string, url: string, options?: any) {
     const n = this.getNode(nodeId);
     if (!n) {
       throw new Error("No node found");
     }
+    if (this.depth() > MAX_DEPTH) {
+      return;
+    }
     const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
-    this.startStream(include.child(), url);
+    this.startStream(include.child(), url, options);
     return include;
   }
 

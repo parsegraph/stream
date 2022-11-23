@@ -23,6 +23,7 @@ class ParsegraphNode {
     this._neighbors = {};
     this._parentNeighbor = null;
     this._nodeFit = Fit.LOOSE;
+    this._scale = 1
   }
 
   setClickListener(cb) {
@@ -34,6 +35,10 @@ class ParsegraphNode {
   }
 
   setScale(scale) {
+    if (this._scale === scale) {
+      return;
+    }
+    this._scale = scale;
     this.server().send("setScale", this.id(), scale);
   }
 
@@ -88,6 +93,10 @@ class ParsegraphNode {
     this.ensureNeighbor(inDirection).alignmentMode =
       newAlignmentMode;
     this.server().send("setNodeAlignmentMode", this.id(), inDirection, newAlignmentMode)
+  }
+
+  setScale(scale) {
+    this.server().send("setScale", this.id(), scale)
   }
 
   connectNode(inDirection, node) {

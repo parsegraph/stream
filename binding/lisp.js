@@ -173,9 +173,6 @@ class LispGraph extends TreeNode {
   }
 
   parse(text, subPath) {
-    if (!text.match(/^\(/)) {
-      text = "(" + text + ")";
-    }
     this._oldText = this._text;
     this._text = text;
     this._subPath = subPath;
@@ -185,7 +182,7 @@ class LispGraph extends TreeNode {
   render() {
     if (this._oldText !== this._text) {
       this._tree.clear();
-      const children = parseTokens(tokenize(this._text));
+      const children = parseTokens(tokenize('(' + this._text + ')'));
       this.graphWithNewlines(this._tree, children.list);
       this._oldText = this._text;
     }

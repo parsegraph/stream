@@ -39,7 +39,6 @@ class RenderNode {
 
   appendChild(child) {
     let dir = this.getChildDirection(child);
-    console.log("appending", nameDirection(dir));
 
     let connectingSite = this;
     if (child.node && connectingSite.node) {
@@ -47,7 +46,6 @@ class RenderNode {
       connectingSite.node.setNodeAlignmentMode(dir, child.align);
       if (connectingSite.pull) {
         connectingSite.node.pull(connectingSite.pull);
-        console.log(connectingSite.pull);
       }
     }
 
@@ -64,8 +62,6 @@ class RenderNode {
   }
 
   insertBefore(child, refChild) {
-    console.log("inserting", child, " before ", refChild);
-
     const refIndex = this.getChildIndex(refChild);
     if (refIndex == 0) {
       // Adding to front
@@ -110,7 +106,6 @@ class RenderNode {
   }
 
   removeChild(child) {
-    console.log("removeChild");
     let childIndex = this.getChildIndex(child);
     if (childIndex < this.nodeChildren.length - 1) {
       let nextChild = this.nodeChildren[childIndex + 1];
@@ -122,7 +117,6 @@ class RenderNode {
       origParent.setNodeAlignmentMode(dir, nextChild.align);
       // Get pull right here
     } else {
-      console.log("Disconnect node!");
       child.node.disconnectNode();
     }
 
@@ -142,10 +136,24 @@ const hostConfig = {
   detachDeletedInstance() {},
 
   createInstance(type, props, server, hostContext) {
-    console.log("createInstance", type);
-    const caret = server.state().newCaret("b");
+    const caret = server.state().newCaret(props.type ?? "b");
     if (props.label != null) {
       caret.label(props.label);
+    }
+    if (props.embed != null) {
+      caret.embed(props.embed);
+    }
+    if (props.overlay != null) {
+      caret.overlay(props.overlay);
+    }
+    if (props.shrink) {
+      caret.shrink()
+    }
+    if (props.grow) {
+      caret.grow()
+    }
+    if (props.scale != null) {
+      caret.node().setScale(props.scale)
     }
 
     const node = new RenderNode(caret.root());
@@ -157,9 +165,6 @@ const hostConfig = {
         : Direction.NULL;
     node.align =
       props.align !== undefined ? readAlignment(props.align) : Alignment.NONE;
-    node.dir && console.log("Dir", props.dir, nameDirection(node.dir));
-    node.connect &&
-      console.log("Connect", props.connect, nameDirection(node.connect));
     hostContext.caret = caret;
     if (props.pull !== undefined) {
       caret.pull(props.pull);
@@ -175,7 +180,6 @@ const hostConfig = {
         const container = document.createElement("div");
         ReactDOM.render(contentFunc(), container, () => {
           new ResizeObserver(() => {
-            console.log(rootContainer, hostContext);
             node.layoutHasChanged();
             rootContainer.scheduleRepaint();
           }).observe(container);
@@ -188,13 +192,14 @@ const hostConfig = {
   },
 
   createTextInstance() {
+    console.log("cti")
     //text, rootContainer, hostContext)
     return new RenderNode(null);
   },
 
   shouldSetTextContent() {
+    console.log("sstc")
     //type, props)
-    console.log("shouldSetTextContent", arguments);
     return false;
   },
 
@@ -202,7 +207,6 @@ const hostConfig = {
     if (!node.node) {
       return false;
     }
-    console.log("prepareUpdate", arguments);
     const diff = [];
     if (oldProps.onClick !== newProps.onClick) {
       diff.push("onClick");
@@ -217,7 +221,6 @@ const hostConfig = {
   },
 
   commitUpdate(node, updatePayload, type, oldProps, props) {
-    console.log("commitUpdate");
     if (!node.node || !updatePayload) {
       return;
     }
@@ -228,11 +231,10 @@ const hostConfig = {
           n.setClickListener(props.onClick);
           break;
         case "label":
-          n.setLabel(props.label);
+          n.value().setLabel(props.label);
           break;
         case "content":
           if (type === "element") {
-            console.log("Content is being updated!");
             const contentFunc = props.content;
             const render = (container) => {
               ReactDOM.render(contentFunc(), container, () => {
@@ -266,12 +268,10 @@ const hostConfig = {
   },
 
   appendChild(parentInstance, child) {
-    console.log("appendChild", arguments);
     parentInstance.appendChild(child);
   },
 
   insertBefore(parentInstance, child, beforeChild) {
-    console.log("insertBefore", arguments);
     parentInstance.insertBefore(child, beforeChild);
   },
 
@@ -280,12 +280,10 @@ const hostConfig = {
   },
 
   getRootHostContext() {
-    console.log("Roothostcontext", arguments);
     return { isElement: false };
   },
 
   finalizeInitialChildren(instance, type, props, rootContainer, hostContext) {
-    console.log("finalizeInitialChildren");
     if (instance.node && instance.pull) {
       instance.node.pull(instance.pull);
     }
@@ -300,17 +298,14 @@ const hostConfig = {
   },
 
   getPublicInstance(instance) {
-    //console.log("getPublicInstance", arguments);
     return instance;
   },
 
   commitTextUpdate(node, oldLabel, newLabel) {
-    console.log("CommitTextUpdate", arguments);
     node.node && node.node.setLabel(newLabel);
   },
 
   prepareForCommit(viewport) {
-    console.log("Preparing for commit");
     lastFocusedNode = [];
     if (viewport._nodeShown) {
       let node = viewport._nodeShown;
@@ -323,7 +318,6 @@ const hostConfig = {
   },
 
   resetAfterCommit(server) {
-    console.log("resetAfterCommit");
     server.scheduleUpdate();
 
     /*let shownRoot = viewport._nodeShown;
@@ -331,7 +325,6 @@ const hostConfig = {
       shownRoot = shownRoot.parentNode();
     }
     if (!shownRoot || shownRoot != viewport.world()._worldRoots[0]) {
-      console.log("Scene lost focus!");
       let node = viewport.world()._worldRoots[0];
       for(let i = 0; i < lastFocusedNode.length; ++i) {
         let dir = lastFocusedNode[i];
@@ -347,7 +340,6 @@ const hostConfig = {
   },
 
   preparePortalMount(containerInfo) {
-    console.log("preparePortalMount", containerInfo);
   },
 
   now() {
@@ -355,15 +347,12 @@ const hostConfig = {
   },
 
   scheduleTimeout(fn) {
-    //console.log("scheduleTimeout", fn);
   },
 
   cancelTimeout(id) {
-    //console.log("cancelTimeout", id);
   },
 
   queueMicrotask(fn) {
-    //console.log("queueMicrotask", fn);
   },
 
   isPrimaryRenderer: false,
@@ -371,7 +360,6 @@ const hostConfig = {
   noTimeout: false,
 
   clearContainer(container) {
-    console.log("clearContainer");
     //const roots = container.world()._worldRoots.concat([]);
     //roots.forEach(root=>container.world().removePlot(root));
   },
@@ -381,24 +369,16 @@ const hostConfig = {
   },
 
   appendChildToContainer(server, node) {
-    //console.log("appendChildToContainer", arguments);
     if (node.node) {
       server.state().setRoot(node.node);
     }
   },
 
   removeChildFromContainer(server, node) {
-    console.log("removeChildFromContainer");
-    //console.log("removeChildFromContainer", arguments);
-    if (server && node && node.node) {
-      server.world().removePlot(node.node);
-    }
+    server.state().setRoot(null);
   },
 
-  commitMount() {
-    //console.log("commitMount", arguments);
-    //container.world().plot(node.node);
-    //container.showInCamera(node.node);
+  commitMount(node) {
   },
 };
 

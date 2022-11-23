@@ -60,18 +60,59 @@ require("./parsegraph-service")(app, getContentRoot());
 require("./parsegraph-feed")(app, getContentRoot());
 require("./parsegraph")(app, getContentRoot());
 
-app.use(root, express.static("../dist"));
+const { gzip } = require("node-gzip");
+
+app.get(/^\/parsegraph\-([a-z]+)\.js$/, async (req, res) => {
+  const parsegraphPath = /^\/parsegraph\-([a-z]+)\.js$/.exec(req.url);
+  const moduleName = parsegraphPath[1];
+  if (!moduleName) {
+    res.status(404).end();
+    return;
+  }
+  const data = await gzip(
+    readFileSync(
+      path.resolve(
+        process.cwd() +
+          `/../node_modules/parsegraph-${moduleName}/dist/src/index.js`
+      )
+    )
+  );
+  res.setHeader("Content-Type", "application/javascript");
+  res.setHeader("Content-Encoding", "gzip");
+  res.end(data);
+});
+
+app.get(/^\/login\/?$/, async (req, res) => {
+  console.log("Getting login")
+  res.setHeader("Content-Type", "text/html");
+  res.end(
+    "<html><head></head><body style='margin: 0; padding: 0; display: flex; align-items: center; flex-direction: column; height: 100%; justify-content: center'><main id='main' style='display: inline-block;'><input type='text'></input><input type='button' value='Log in'></input></main><script>document.addEventListener('DOMContentLoaded', () => { const elem = document.getElementById('main'); new ResizeObserver(()=>{window.parsegraphResize(elem.clientWidth, elem.clientHeight)}).observe(elem) })</script></body></html>"
+  );
+});
+
+app.get(/^\/demo\.js$/, async (req, res) => {
+  const data = await gzip(
+    readFileSync(path.resolve(process.cwd() + `/../dist-prod/src/demo.js`))
+  );
+  res.setHeader("Content-Type", "application/javascript");
+  res.setHeader("Content-Encoding", "gzip");
+  res.end(data);
+});
+
 app.use(root, express.static("../www"));
+app.use(root, express.static("../dist-prod/src"));
+app.use(root, express.static("../dist-prod"));
 
 app.get(/(.*)$/, async (req, res) => {
   res.sendFile(path.resolve(process.cwd() + "/../www/demo.html"));
 });
 
+const host = "10.11.0.2"
 console.log("PORT: " + port);
-app.listen(port, () => {
+app.listen(port, host, 0, () => {
   if (typeof port === "number") {
     console.log(
-      `See ${DIST_NAME} build information at http://localhost:${port}${root}`
+      `See ${DIST_NAME} build information at http://${host}:${port}${root}`
     );
   } else {
     console.log(`See ${DIST_NAME} server at ${port}`);

@@ -14,7 +14,6 @@ const graphWithNewlines = (server, root, list) => {
       graphWithNewlines(server, list, child);
       root.appendChild(list);
     } else {
-      console.log("Render JSON cell", child);
       const cell = new JSONCell(server, child);
       root.appendChild(cell);
     }
@@ -201,7 +200,6 @@ class JSONGraph extends TreeNode {
     if (this._oldText === text) {
       return;
     }
-    console.log("PArsing JSON ", text);
     this._text = text;
     this.setValue(JSON.parse(this._text));
     this._oldText = this._text;
@@ -212,7 +210,6 @@ class JSONGraph extends TreeNode {
       return;
     }
     this._value = val;
-    console.log("SEtting JSON value", val);
     this.invalidate();
   }
 

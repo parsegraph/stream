@@ -20,7 +20,6 @@ class ParsegraphServer {
   addCallback(cb) {
     this._callbacks.push(cb);
     const callbackId = this._callbacks.length - 1;
-    console.log("Added callback", callbackId)
     return callbackId;
   }
 
@@ -35,7 +34,6 @@ class ParsegraphServer {
   connect(writer) {
     const client = new ParsegraphClient(this, writer);
     this._clients.push(client);
-    console.log("Client connected", this._messages.length);
     this._messages.forEach((msg) => client.send(...msg));
     return () => {
       for (let i = 0; i < this._clients.length; ++i) {

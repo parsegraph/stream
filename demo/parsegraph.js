@@ -13,7 +13,7 @@ module.exports = (app, contentRoot) => {
   const servers = {};
   const streams = {};
 
-  app.get(/^\/parsegraph\/(.*)$/, (req, resp) => {
+  app.get(/^\/parsegraph\/(.*)$/, async (req, resp) => {
     resp.writeHead(200, {
       "Content-Type": "text/event-stream",
       Connection: "keep-alive",
@@ -23,8 +23,12 @@ module.exports = (app, contentRoot) => {
     const subPath = req.url
       .substring("/parsegraph".length)
       .replaceAll(/\/+$/g, "");
-    const stream = streams[subPath] ?? servers[subPath] ?? streamPath(mainPath, subPath);
+    if (!streams[subPath]) {
+      streams[subPath] = await streamPath(mainPath, subPath);
+    }
+    const stream = streams[subPath];
     stream.setCallbackUrl(path.join("/callback", subPath));
+    console.log("Connecting");
     const remover = stream.connect((...args) => {
       resp.write(`data: ${JSON.stringify(args)}\n\n`);
     });
@@ -39,7 +43,7 @@ module.exports = (app, contentRoot) => {
     });
   });
 
-  app.get(/\/events\/?(.*)$/, (req, resp) => {
+  app.get(/\/events\/?(.*)$/, async (req, resp) => {
     resp.writeHead(200, {
       "Content-Type": "text/event-stream",
       Connection: "keep-alive",
@@ -48,7 +52,7 @@ module.exports = (app, contentRoot) => {
     const mainPath = contentRoot;
     const subPath = req.url.substring("/events/".length);
     if (!servers[subPath]) {
-      servers[subPath] = servePath(mainPath, subPath);
+      servers[subPath] = await servePath(mainPath, subPath);
       servers[subPath].setCallbackUrl("/callback/" + subPath);
     }
     const server = servers[subPath];
@@ -58,14 +62,15 @@ module.exports = (app, contentRoot) => {
     req.on("close", remover);
   });
 
-  app.get(/\/graph\/?(.*)$/, (req, resp) => {
+  app.get(/\/graph\/?(.*)$/, async (req, resp) => {
     resp.writeHead(200, {
       "Content-Type": "text/plain",
     });
     const mainPath = contentRoot;
     const subPath = req.url.substring("/graph/".length);
+    console.log("Sending subPath", subPath)
     if (!servers[subPath]) {
-      servers[subPath] = servePath(mainPath, subPath);
+      servers[subPath] = await servePath(mainPath, subPath);
       servers[subPath].setCallbackUrl("/callback/" + subPath);
     }
     const server = servers[subPath];
@@ -77,6 +82,7 @@ module.exports = (app, contentRoot) => {
       resp.write("\n");
     });
     resp.end();
+    console.log("Graph stream complete.");
   });
 
   app.get(/\/feed\/?$/, (req, resp) => {
@@ -151,7 +157,7 @@ module.exports = (app, contentRoot) => {
   app.post(
     /\/callback(\/.*)$/,
     bodyParser.json({ strict: false }),
-    (req, resp) => {
+    async (req, resp) => {
       console.log("Callback", req.url);
       console.log(
         "Callback",
@@ -162,13 +168,11 @@ module.exports = (app, contentRoot) => {
         req.url,
         "http://localhost:15557"
       ).pathname.substring("/callback".length);
-      let stream = streams[subPath] ?? servers[subPath];
-      if (!stream) {
-        stream = streamPath(contentRoot, subPath)
-        streams[subPath] = stream
-        servers[subPath] = stream
+      if (!streams[subPath]) {
+        streams[subPath] = await streamPath(contentRoot, subPath);
       }
       try {
+        const stream = streams[subPath];
         stream.callback(parseInt(req.query.cb));
         resp.end();
       } catch (ex) {
