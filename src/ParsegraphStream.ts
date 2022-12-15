@@ -100,6 +100,13 @@ export default class ParsegraphStream {
   _prefix: string;
   _onLink: (url: string, options?: any) => void;
   _onStream: (stream: ParsegraphStream, url: string, options?: any) => void;
+  _onPopulate: (stream: ParsegraphStream, url: string, options?: any) => void;
+
+  onPopulate(
+    populator: (stream: ParsegraphStream, url: string, options?: any) => void
+  ) {
+    this._onPopulate = populator;
+  }
 
   _es: EventSource;
   _depth: number;
@@ -132,6 +139,7 @@ export default class ParsegraphStream {
     this._prefix = "";
     this._onLink = null;
     this._onStream = null;
+    this._onPopulate = null;
     this._depth = 0;
   }
 
@@ -153,6 +161,10 @@ export default class ParsegraphStream {
   }
 
   populate(url: string, options?: any) {
+    if (this._onPopulate) {
+      this._onPopulate(this, url, options);
+      return;
+    }
     if (this._es) {
       this.stop();
     }
