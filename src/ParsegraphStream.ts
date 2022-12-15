@@ -8,14 +8,13 @@ import Block, {
   DefaultBlockScene,
 } from "parsegraph-block";
 import { BlockType } from "parsegraph-blockpainter";
-import Navport from "parsegraph-viewport";
+import Navport, { ActionCarousel } from "parsegraph-viewport";
 import Direction, {
   readAlignment,
   readDirection,
   readPreferredAxis,
   readFit,
 } from "parsegraph-direction";
-import { ActionCarousel } from "parsegraph-carousel";
 import { PaintedNode, DOMContent } from "parsegraph-artist";
 import { showInCamera } from "parsegraph-showincamera";
 import { DOMContentArtist } from "parsegraph-artist";
