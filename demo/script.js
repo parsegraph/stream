@@ -64,11 +64,15 @@ const makeTree = (server, mainPath, subPath) => {
   car.spawnMove("d", "b");
   car.label(subPath);
   const paths = [];
-  readdirSync(fullPath, {
-    withFileTypes: true,
-  }).forEach((e) => {
-    paths.push(e.name);
-  });
+  try {
+    readdirSync(fullPath, {
+      withFileTypes: true,
+    }).forEach((e) => {
+      paths.push(e.name);
+    });
+  } catch (ex) {
+    paths.push(ex ? ex.toString() : "");
+  }
 
   let len = 0;
   car.spawnMove("d", "u");
@@ -319,7 +323,13 @@ const servePath = async (mainPath, subPath) => {
 
   const fullPath = join(mainPath, subPath);
   const refresh = async () => {
-    const stats = statSync(fullPath, { throwIfNoEntry: false });
+    let stats;
+    try {
+      stats = statSync(fullPath, { throwIfNoEntry: false });
+    } catch (ex) {
+      console.log("statSync", fullPath, ex);
+      return;
+    }
     if (!stats) {
       return;
     }
