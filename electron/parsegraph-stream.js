@@ -1,0 +1,1 @@
+../dist-prod/src/index.js
