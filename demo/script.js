@@ -316,7 +316,7 @@ const streamPath = async (mainPath, subPath) => {
 
 const servePath = async (mainPath, subPath) => {
   const server = new ParsegraphServer();
-  server.state().setBackgroundColor(64 / 255, 130 / 255, 109 / 255, 1);
+  server.state().setBackgroundColor(149 / 255, 149 / 255, 149 / 255, 1);
 
   while (subPath.endsWith("/")) {
     subPath = subPath.substring(0, subPath.length - 1);
