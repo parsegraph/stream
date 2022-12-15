@@ -113,7 +113,8 @@ const makeTree = (server, mainPath, subPath) => {
     car.node().value().setBlockStyle(s);
     car.pull("d");
     car.label(path);
-    car.include('d', join(subPath, path));
+    car.link(join(fullPath, path));
+    car.include("d", join(fullPath, path));
     car.pop();
   });
   return car.root();
