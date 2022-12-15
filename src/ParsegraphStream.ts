@@ -695,13 +695,20 @@ export default class ParsegraphStream {
     return this._fallbackArtist;
   }
 
+  depthLink(nodeId: number, dir: string, url: string, options?: any) {
+    const node = this.palette().spawn("u");
+    this.linkNode(node, url, options);
+    this.getNode(nodeId).connectNode(readDirection(dir), node);
+  }
+
   include(nodeId: number, dir: string, url: string, options?: any) {
     const n = this.getNode(nodeId);
     if (!n) {
       throw new Error("No node found");
     }
     if (this.depth() > MAX_DEPTH) {
-      return;
+      this.depthLink(nodeId, dir, url, options);
+      return null;
     }
     const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
     include.child().populate(url, options);
@@ -740,7 +747,8 @@ export default class ParsegraphStream {
       throw new Error("No node found");
     }
     if (this.depth() > MAX_DEPTH) {
-      return;
+      this.depthLink(nodeId, dir, url, options);
+      return null;
     }
     const include = new ParsegraphInclude(this, nodeId, readDirection(dir));
     this.startStream(include.child(), url, options);
