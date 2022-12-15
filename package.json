@@ -1,6 +1,6 @@
 {
   "name": "parsegraph-stream",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "stream",
   "main": "dist-prod/src/index.js",
   "types": "dist-prod/src/index.d.ts",
