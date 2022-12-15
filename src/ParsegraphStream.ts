@@ -318,8 +318,8 @@ export default class ParsegraphStream {
     this._onLink = callback;
   }
 
-  link(nodeId: number, url: string, options?: any) {
-    this.getNode(nodeId)
+  linkNode(node: BlockNode, url: string, options?: any) {
+    node
       .value()
       .interact()
       .setClickListener(() => {
@@ -335,6 +335,10 @@ export default class ParsegraphStream {
         }
         return false;
       });
+  }
+
+  link(nodeId: number, url: string, options?: any) {
+    this.linkNode(this.getNode(nodeId), url, options);
   }
 
   action(nodeId: number, url: string, payload?: any) {
