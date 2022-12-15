@@ -1,5 +1,5 @@
 const { readdirSync, fstat, readFile } = require("fs");
-const path = require('path')
+const path = require("path");
 const { spawnSync } = require("child_process");
 const {
   ParsegraphServer,
@@ -115,7 +115,7 @@ const makeTree = (server, mainPath, subPath) => {
   return car.root();
 };
 
-const reactParsegraph = async (server, content, fullPath, props)=>{
+const reactParsegraph = async (server, content, fullPath, props) => {
   const options = {
     filename: fullPath,
     presets: [
@@ -124,10 +124,7 @@ const reactParsegraph = async (server, content, fullPath, props)=>{
       "@babel/react",
     ],
   };
-  const result = require("@babel/core").transformSync(
-    content,
-    options
-  );
+  const result = require("@babel/core").transformSync(content, options);
   const func = vm.runInThisContext(
     [
       "(function (exports, require, module, __filename, __dirname) { ",
@@ -139,7 +136,7 @@ const reactParsegraph = async (server, content, fullPath, props)=>{
       liveOffset: 1,
     }
   );
-  console.log("Module run")
+  console.log("Module run");
   const mod = { exports: {} };
   func(
     mod.exports,
@@ -152,7 +149,7 @@ const reactParsegraph = async (server, content, fullPath, props)=>{
     },
     mod,
     fullPath,
-    fullPath,
+    fullPath
   );
   const out =
     typeof mod.exports === "function" ? mod.exports : mod.exports.default;
@@ -162,28 +159,28 @@ const reactParsegraph = async (server, content, fullPath, props)=>{
   }
 
   await renderReactParsegraph(server, out, props);
-}
+};
 
 const renderReactParsegraph = (server, out, props) => {
-  return new Promise((resolve)=>{
-    console.log("Creating container")
+  return new Promise((resolve) => {
+    console.log("Creating container");
     const container = Reconciler.createContainer(server, 0, false, null);
-    console.log("Updating container")
+    console.log("Updating container");
     const view = out(props);
-    console.log("Got JSX", view)
+    console.log("Got JSX", view);
     Reconciler.updateContainer(view, container, null, () => {
       resolve();
     });
     console.log("Updating container");
   });
-}
+};
 
 const buildStreamPath = async (server, mainPath, subPath) => {
-  const fullPath = path.join(mainPath, subPath)
+  const fullPath = path.join(mainPath, subPath);
   const fileType = spawnSync("/usr/bin/file", ["-b", fullPath])
     .stdout.toString()
     .trim();
-  console.log(fileType)
+  console.log(fileType);
   if (fileType === "directory") {
     return servePath(mainPath, subPath);
   }
@@ -205,13 +202,13 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     JS_EXTENSIONS.some((ext) => fullPath.endsWith(".parsegraph" + ext)) ||
     TS_EXTENSIONS.some((ext) => fullPath.endsWith(".parsegraph" + ext))
   ) {
-    const refresh = async ()=>{
+    const refresh = async () => {
       try {
-        await reactParsegraph(server, readFileSync(fullPath), fullPath)
+        await reactParsegraph(server, readFileSync(fullPath), fullPath);
       } catch (ex) {
         console.log(ex);
       }
-    }
+    };
     watch(fullPath, null, refresh);
     await refresh();
     return;
@@ -235,29 +232,32 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     return;
   }
 
-  const parseType = async (parseType)=>{
-    const parser = __dirname + `/../parser/${parseType}.jsx`
-    const refresh = async ()=>{
+  const parseType = async (parseType) => {
+    const parser = __dirname + `/../parser/${parseType}.jsx`;
+    const refresh = async () => {
       try {
         console.log("Reacting parsegraph");
         await reactParsegraph(server, readFileSync(parser), fullPath, {
-          content:readFileSync(fullPath),
-          name:fullPath})
-          console.log("Parsegraph reacted");
+          content: readFileSync(fullPath),
+          name: fullPath,
+        });
       } catch (ex) {
         console.log("Exception during parse", ex);
       }
-    }
+    };
     watch(parser, null, refresh);
     watch(fullPath, null, refresh);
     await refresh();
     return;
-  }
+  };
 
   if (TS_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
     const car = server.state().newCaret("b");
 
-    const program = require("typescript").createProgram([fullPath], { allowJs: true, jsx: 'preserve'});
+    const program = require("typescript").createProgram([fullPath], {
+      allowJs: true,
+      jsx: "preserve",
+    });
     const ast = program.getSourceFile(fullPath);
     console.log(ast);
 
@@ -269,11 +269,15 @@ const buildStreamPath = async (server, mainPath, subPath) => {
 
   if (JS_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
     const car = server.state().newCaret("b");
-    const ast = require("espree").parse(readFileSync(fullPath), { ecmaVersion: 'latest', sourceType: 'module', ecmaFeatures: {
-      jsx: true
-    } });
+    const ast = require("espree").parse(readFileSync(fullPath), {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      ecmaFeatures: {
+        jsx: true,
+      },
+    });
     console.log(ast);
-    ast.body.forEach(node=>console.log(node))
+    ast.body.forEach((node) => console.log(node));
 
     car.label("Babel");
     car.spawnMove("d", "b");
@@ -281,13 +285,13 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     return;
   }
 
-  if (fullPath.endsWith(".lisp") || fileType.includes('ASCII text')) {
-    await parseType("lisp")
+  if (fullPath.endsWith(".lisp") || fileType.includes("ASCII text")) {
+    await parseType("lisp");
     return;
   }
 
   if (fullPath.endsWith(".json") || fileType.includes("JSON")) {
-    await parseType("json")
+    await parseType("json");
     return;
   }
 
@@ -296,7 +300,7 @@ const buildStreamPath = async (server, mainPath, subPath) => {
   car.label(fileType);
   car.spawnMove("d", "b");
   server.state().setRoot(car.root());
-}
+};
 
 const streamPath = async (mainPath, subPath) => {
   const fullPath = subPath ? join(mainPath, subPath) : mainPath;
@@ -323,7 +327,7 @@ const servePath = async (mainPath, subPath) => {
       server.state().setRoot(makeTree(server, mainPath, subPath));
     } else {
       //server.state().setRoot(serveFile(server, mainPath, subPath));
-      await buildStreamPath(server, mainPath, subPath)
+      await buildStreamPath(server, mainPath, subPath);
       //watch(fullPath, null, refresh);
     }
   };

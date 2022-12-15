@@ -423,9 +423,12 @@ export default class ParsegraphStream {
   }
 
   overlay(nodeId: number, url: string) {
-    this.getNode(nodeId).value().interact().setClickListener(()=>{
-      this.viewport().web().show(url);
-    })
+    this.getNode(nodeId)
+      .value()
+      .interact()
+      .setClickListener(() => {
+        this.viewport().web().show(url);
+      });
   }
 
   carousel(nodeId: number, actions: [string, string, string][]) {

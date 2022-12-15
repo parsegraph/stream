@@ -147,13 +147,13 @@ const hostConfig = {
       caret.overlay(props.overlay);
     }
     if (props.shrink) {
-      caret.shrink()
+      caret.shrink();
     }
     if (props.grow) {
-      caret.grow()
+      caret.grow();
     }
     if (props.scale != null) {
-      caret.node().setScale(props.scale)
+      caret.node().setScale(props.scale);
     }
 
     const node = new RenderNode(caret.root());
@@ -192,13 +192,13 @@ const hostConfig = {
   },
 
   createTextInstance() {
-    console.log("cti")
+    console.log("cti");
     //text, rootContainer, hostContext)
     return new RenderNode(null);
   },
 
   shouldSetTextContent() {
-    console.log("sstc")
+    console.log("sstc");
     //type, props)
     return false;
   },
@@ -339,21 +339,17 @@ const hostConfig = {
     viewport.world().scheduleRepaint();*/
   },
 
-  preparePortalMount(containerInfo) {
-  },
+  preparePortalMount(containerInfo) {},
 
   now() {
     return Date.now();
   },
 
-  scheduleTimeout(fn) {
-  },
+  scheduleTimeout(fn) {},
 
-  cancelTimeout(id) {
-  },
+  cancelTimeout(id) {},
 
-  queueMicrotask(fn) {
-  },
+  queueMicrotask(fn) {},
 
   isPrimaryRenderer: false,
 
@@ -378,8 +374,7 @@ const hostConfig = {
     server.state().setRoot(null);
   },
 
-  commitMount(node) {
-  },
+  commitMount(node) {},
 };
 
 module.exports = Reconciler(hostConfig);

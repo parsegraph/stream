@@ -83,7 +83,7 @@ app.get(/^\/parsegraph\-([a-z]+)\.js$/, async (req, res) => {
 });
 
 app.get(/^\/login\/?$/, async (req, res) => {
-  console.log("Getting login")
+  console.log("Getting login");
   res.setHeader("Content-Type", "text/html");
   res.end(
     "<html><head></head><body style='margin: 0; padding: 0; display: flex; align-items: center; flex-direction: column; height: 100%; justify-content: center'><main id='main' style='display: inline-block;'><input type='text'></input><input type='button' value='Log in'></input></main><script>document.addEventListener('DOMContentLoaded', () => { const elem = document.getElementById('main'); new ResizeObserver(()=>{window.parsegraphResize(elem.clientWidth, elem.clientHeight)}).observe(elem) })</script></body></html>"
@@ -107,7 +107,7 @@ app.get(/(.*)$/, async (req, res) => {
   res.sendFile(path.resolve(process.cwd() + "/../www/demo.html"));
 });
 
-const host = "10.11.0.2"
+const host = "10.11.0.2";
 console.log("PORT: " + port);
 app.listen(port, host, 0, () => {
   if (typeof port === "number") {

@@ -68,7 +68,7 @@ module.exports = (app, contentRoot) => {
     });
     const mainPath = contentRoot;
     const subPath = req.url.substring("/graph/".length);
-    console.log("Sending subPath", subPath)
+    console.log("Sending subPath", subPath);
     if (!servers[subPath]) {
       servers[subPath] = await servePath(mainPath, subPath);
       servers[subPath].setCallbackUrl("/callback/" + subPath);
