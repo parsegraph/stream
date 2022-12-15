@@ -41,7 +41,7 @@
     "jsdom-global": "^3.0.2",
     "parsegraph-checkglerror": "^1.5.3",
     "parsegraph-log": "^1.7.3",
-    "parsegraph-viewport": "^2.7.11",
+    "parsegraph-viewport": "^2.7.24",
     "prettier": "^2.7.1",
     "raw-loader": "^4.0.2",
     "source-map-loader": "^4.0.0",
@@ -56,7 +56,7 @@
   "peerDependencies": {
     "parsegraph-checkglerror": "^1.5.3",
     "parsegraph-log": "^1.7.3",
-    "parsegraph-viewport": "^2.7.11"
+    "parsegraph-viewport": "^2.7.24"
   },
   "dependencies": {
     "@babel/preset-react": "^7.18.6",
