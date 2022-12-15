@@ -66,6 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 
+  mainStream.onPopulate((stream, url)=>{
+      window.electronAPI.parsegraphPopulate(url, (...args)=>{
+        stream.event(...args)
+      });
+  });
+
   mainStream.setCallbackHandler((callbackUrl, callbackId, val)=>{
       window.electronAPI.parsegraphCallback(callbackUrl, callbackId, val)
       return new Promise((resolve)=>{

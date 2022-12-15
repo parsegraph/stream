@@ -60,9 +60,9 @@ const createWindow = () => {
     stream.callback(callbackId, val)
   })
 
-  ipcMain.on('parsegraph-start', (_, url)=>{
+  ipcMain.on('parsegraph-start', async (_, url)=>{
     console.log("START ", url)
-    const stream = servePath(streamRoot, url)
+    const stream = await servePath(streamRoot, url)
     stream.setCallbackUrl(url)
     stream.connect((...args)=>{
       //console.log("Parsegraph stream", ...args)
@@ -70,13 +70,24 @@ const createWindow = () => {
     });
   })
 
-  ipcMain.on('parsegraph-stream', (_, url)=>{
+  ipcMain.on('parsegraph-stream', async (_, url)=>{
     console.log("CONNECTED TO", url)
-    const stream = streamPath(streamRoot, url)
+    const stream = await streamPath(streamRoot, url)
     stream.setCallbackUrl(url)
     streams[url] = stream
     stream.connect((...args)=>{
       mainWindow.webContents.send('parsegraph-stream-event', url, ...args)
+    });
+  })
+
+  const servers = {};
+  ipcMain.on('parsegraph-populate', async (_, url)=>{
+    if (!servers[url]) {
+      servers[url] = await servePath(streamRoot, subPath);
+    }
+    const server = servers[url]
+    server.forEach((...args)=>{
+      mainWindow.webContents.send('parsegraph-populate-event', url, ...args)
     });
   })
 }

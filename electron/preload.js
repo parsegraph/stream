@@ -31,6 +31,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on('parsegraph-stream-event', listener)
       }
     },
+    parsegraphPopulate: (url, callback) => {
+      ipcRenderer.send('parsegraph-populate', url);
+      if (callback) {
+        const listener = (_, eventUrl, ...args)=>{
+          if (eventUrl === url) {
+            callback(...args)
+          }
+        }
+        ipcRenderer.on('parsegraph-populate-event', listener)
+      }
+    },
     parsegraphLog: (text) => {
       ipcRenderer.send("parsegraph-log", text)
     }
