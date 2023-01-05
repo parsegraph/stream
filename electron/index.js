@@ -23,7 +23,7 @@ const createWindow = () => {
   mainWindow.loadFile('index.html')
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  //mainWindow.webContents.openDevTools()
 
   const logSocket = net.connect(28122, "localhost", ()=>{
     ipcMain.on('parsegraph-log', (_, text)=>{
