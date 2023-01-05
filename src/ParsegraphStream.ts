@@ -160,9 +160,24 @@ export default class ParsegraphStream {
       : "";
   }
 
+  getOnPopulate(): (
+    stream: ParsegraphStream,
+    url: string,
+    options?: any
+  ) => void {
+    let stream: ParsegraphStream = this;
+    while (stream) {
+      if (stream._onPopulate) {
+        return stream._onPopulate;
+      }
+      stream = stream._include?.parent();
+    }
+    return null;
+  }
+
   populate(url: string, options?: any) {
-    if (this._onPopulate) {
-      this._onPopulate(this, url, options);
+    if (this.getOnPopulate()) {
+      this.getOnPopulate()(this, url, options);
       return;
     }
     if (this._es) {
