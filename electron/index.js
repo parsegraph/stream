@@ -25,11 +25,15 @@ const createWindow = () => {
   // Open the DevTools.
   //mainWindow.webContents.openDevTools()
 
-  const logSocket = net.connect(28122, "localhost", ()=>{
-    ipcMain.on('parsegraph-log', (_, text)=>{
-      logSocket.write(text + "\r\n")
+  try {
+    const logSocket = net.connect(28122, "localhost", ()=>{
+      ipcMain.on('parsegraph-log', (_, text)=>{
+        logSocket.write(text + "\r\n")
+      })
     })
-  })
+  } catch (ex) {
+    console.log(ex);
+  }
 
   const streamRoot = process.env.SITE_ROOT || process.cwd()
 
