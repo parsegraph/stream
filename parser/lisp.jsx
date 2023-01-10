@@ -20,19 +20,6 @@ const Slot = ({dir, value, setValue})=>{
   </parsegraph>
 }
 
-const IMultislot = ({dir, list, onPrepend, onAppend, onUpdate, onRemove, render})=>{
-  return [...list].reverse().reduce((children, cell, indexReversed)=>{
-    const index = list.length - 1 - indexReversed;
-    const dir = index === 0 ? 'i' : 'f'
-    if (cell.type == 2) {
-      return <IMultislot dir='f' list={cell.list} render={(child)=>{
-        return <Cell dir='i' cell={child}/>
-      }}/>
-    }
-    return <parsegraph dir={dir} label={cell.val}>{children}</parsegraph>
-  }, null)
-}
-
 const VMultislot = ({dir, list, onPrepend, onAppend, onUpdate, onRemove, render})=>{
   return <parsegraph dir={dir} type="u" pull="f" onClick={onPrepend}>
   {[...list].reverse().reduce((children, item, index)=>(
