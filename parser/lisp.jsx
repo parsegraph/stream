@@ -11,7 +11,6 @@ const {
 
 const Slot = ({dir, value, setValue})=>{
   const [editing, setEditing] = useState(false);
-  console.log("SLOT")
   return <parsegraph dir={dir} type="b" label={value} onClick={()=>{
     setEditing(!editing);
   }}>
@@ -59,7 +58,6 @@ const Cell = ({dir, cell, children, scale})=>{
   //List = 2,
   //Proc = 3,
   //Lambda = 4
-console.log(cell)
 
   if (!cell) {
     return null;
@@ -102,11 +100,8 @@ console.log(cell)
 const Page = ({name, content})=>{
   let children;
   try {
-    console.log("Lexing");
     const tokens = tokenize('(' + content + ')')
-    console.log("Parsing");
     children = parseTokens(tokens);
-    console.log("Parsed");
   } catch (ex) {
     children = {list: [{val: ex.toString(), type: 0}]}
   }

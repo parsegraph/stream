@@ -198,7 +198,6 @@ const hostConfig = {
   },
 
   shouldSetTextContent() {
-    console.log("sstc");
     //type, props)
     return false;
   },
