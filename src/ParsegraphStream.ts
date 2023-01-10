@@ -100,6 +100,7 @@ export default class ParsegraphStream {
   _onLink: (url: string, options?: any) => void;
   _onStream: (stream: ParsegraphStream, url: string, options?: any) => void;
   _onPopulate: (stream: ParsegraphStream, url: string, options?: any) => void;
+  _onRoot: (node: PaintedNode)=>void;
 
   onPopulate(
     populator: (stream: ParsegraphStream, url: string, options?: any) => void
@@ -139,6 +140,7 @@ export default class ParsegraphStream {
     this._onLink = null;
     this._onStream = null;
     this._onPopulate = null;
+    this._onRoot = null;
     this._depth = 0;
   }
 
@@ -692,8 +694,16 @@ export default class ParsegraphStream {
       return;
     }
     const root = this.getNode(nodeId);
-    this.viewport().setRoot(root);
-    this.viewport().showInCamera(root);
+    if (this._onRoot) {
+      this._onRoot(root);
+    } else {
+      this.viewport().setRoot(root);
+      this.viewport().showInCamera(root);
+    }
+  }
+
+  setOnRoot(onRoot:(root:PaintedNode)=>void) {
+    this._onRoot = onRoot;
   }
 
   fallbackArtist() {
