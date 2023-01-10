@@ -16,7 +16,6 @@ import Direction, {
   readFit,
 } from "parsegraph-direction";
 import { PaintedNode, DOMContent } from "parsegraph-artist";
-import { showInCamera } from "parsegraph-showincamera";
 import { DOMContentArtist } from "parsegraph-artist";
 import parseRain from "./parseRain";
 
@@ -703,7 +702,6 @@ export default class ParsegraphStream {
     const root = this.getNode(nodeId);
     this.viewport().setRoot(root);
     this.viewport().showInCamera(root);
-    showInCamera(root, this.viewport().camera(), false);
   }
 
   fallbackArtist() {
