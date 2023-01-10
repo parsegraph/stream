@@ -173,7 +173,7 @@ module.exports = (app, contentRoot) => {
       }
       try {
         const stream = streams[subPath];
-        stream.callback(parseInt(req.query.cb));
+        stream.callback(parseInt(req.query.cb), req.body);
         resp.end();
       } catch (ex) {
         console.log(ex);
