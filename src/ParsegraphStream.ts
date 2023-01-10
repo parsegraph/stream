@@ -499,6 +499,7 @@ export default class ParsegraphStream {
     const returnToView = ()=>{
       n.setValue(block);
       block.setNode(n);
+      this.viewport().scheduleRepaint();
     }
 
     const commit = ()=>{
@@ -524,6 +525,7 @@ export default class ParsegraphStream {
     });
     div.appendChild(c);
     const edit = new DOMContent(() => div);
+    edit.setOnScheduleUpdate(()=>this.viewport().scheduleRepaint());
     edit.setArtist(domArtist);
 
     const install = () => {
