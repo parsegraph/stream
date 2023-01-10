@@ -19,7 +19,7 @@ import { PaintedNode, DOMContent } from "parsegraph-artist";
 import { DOMContentArtist } from "parsegraph-artist";
 import parseRain from "./parseRain";
 
-const MAX_DEPTH = 0;
+const MAX_DEPTH = 1;
 
 const domArtist = new DOMContentArtist();
 
@@ -487,31 +487,43 @@ export default class ParsegraphStream {
 
   _splicer: Splicer;
 
-  textEdit(nodeId: number, val: string, callbackId: number) {
+  private makeTextEdit(nodeId: number, val: string, callback: (newVal:string)=>Promise<any>) {
     const n = this.getNode(nodeId);
     const block = n.value();
     block.setLabel(val);
-    const edit = new DOMContent(() => {
-      console.log("Creating edit", val);
-      const c = document.createElement("input");
-      c.style.pointerEvents = "all";
-      c.value = val;
-      c.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          n.setValue(block);
-          block.setNode(n);
-          const p = this.makeCallback(callbackId, c.value);
-          p.then(() => {
-            console.log("Refreshing");
-            // window.location.href = window.location.href;
-            this.viewport()._painter.dispose();
-            this.viewport().scheduleRepaint();
-          });
-        }
-      });
-      return c;
+    const div = document.createElement("div");
+    const c = document.createElement("input");
+    c.style.pointerEvents = "all";
+    c.value = val;
+
+    const returnToView = ()=>{
+      n.setValue(block);
+      block.setNode(n);
+    }
+
+    const commit = ()=>{
+      origValue = c.value;
+      returnToView();
+    };
+
+    let origValue = val;
+    c.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        // Commit
+        e.preventDefault();
+        callback(c.value).then(()=>{
+          commit();
+        }).catch(()=>{
+        });
+      } else if (e.key === "Escape") {
+        // Cancel
+        e.preventDefault();
+        c.value = origValue;
+        returnToView();
+      }
     });
+    div.appendChild(c);
+    const edit = new DOMContent(() => div);
     edit.setArtist(domArtist);
 
     const install = () => {
@@ -520,12 +532,15 @@ export default class ParsegraphStream {
         .setClickListener(() => {
           edit.setNode(n);
           n.setValue(edit);
-          this.viewport()._painter.dispose();
-          this.viewport().scheduleRepaint();
         });
     };
     install();
     return val;
+  }
+
+  textEdit(nodeId: number, val: string, callbackId: number) {
+
+    return this.makeTextEdit(nodeId, val, (newVal)=>this.makeCallback(callbackId, newVal));
   }
 
   textSplice(
@@ -535,43 +550,7 @@ export default class ParsegraphStream {
     len: number,
     subPath: string
   ) {
-    const n = this.getNode(nodeId);
-    const block = n.value();
-    const edit = new DOMContent(() => {
-      console.log("Creating edit", val);
-      const c = document.createElement("input");
-      c.style.pointerEvents = "all";
-      c.value = val;
-      c.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          const p = this.getSplicer()(c.value, offset, len, subPath);
-          p.then(() => {
-            console.log("Refreshing");
-            n.setValue(block);
-            block.setNode(n);
-            // window.location.href = window.location.href;
-            this.viewport()._painter.dispose();
-            this.viewport().scheduleRepaint();
-          });
-        }
-      });
-      return c;
-    });
-    edit.setArtist(domArtist);
-
-    const install = () => {
-      n.value()
-        .interact()
-        .setClickListener(() => {
-          edit.setNode(n);
-          n.setValue(edit);
-          this.viewport()._painter.dispose();
-          this.viewport().scheduleRepaint();
-        });
-    };
-    install();
-    return val;
+    return this.makeTextEdit(nodeId, val, (newVal)=>this.getSplicer()(newVal, offset, len, subPath));
   }
 
   parseColor(val: string) {

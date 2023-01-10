@@ -35,24 +35,24 @@ const VMultislot = ({dir, list, onPrepend, onAppend, onUpdate, onRemove, render}
   </parsegraph>
 }
 
-const CellLineContent = ({cellLine, dir})=>{
+const CellLineContent = ({subPath, cellLine, dir})=>{
   return cellLine.reverse().reduce((cellChildren, child, indexReversed)=>{
     const index = cellLine.length - 1 - indexReversed;
-    return <Cell dir={index == 0 ? dir : 'f'} cell={child}>{cellChildren}</Cell>
+    return <Cell subPath={subPath} dir={index == 0 ? dir : 'f'} cell={child}>{cellChildren}</Cell>
   }, null)
 }
 
-const CellLine = ({dir, cellLine, children})=>{
+const CellLine = ({subPath, dir, cellLine, children})=>{
   if (!cellLine || cellLine.length === 0) {
     return children;
   }
   return <parsegraph dir={dir} type='s'>
-    <CellLineContent dir='i' cellLine={cellLine}/>
+    <CellLineContent subPath={subPath} dir='i' cellLine={cellLine}/>
     {children}
   </parsegraph>
 }
 
-const Cell = ({dir, cell, children, scale})=>{
+const Cell = ({subPath, dir, cell, children, scale})=>{
   //Symbol = 0,
   //Number = 1,
   //List = 2,
@@ -74,7 +74,7 @@ const Cell = ({dir, cell, children, scale})=>{
     }, [[]])
 
     if (cellLines.length === 1) {
-      return <CellLine dir={dir} cellLine={cellLines[0]}>
+      return <CellLine subPath={subPath} dir={dir} cellLine={cellLines[0]}>
         {children}
       </CellLine>
     }
@@ -82,19 +82,19 @@ const Cell = ({dir, cell, children, scale})=>{
     const firstLine = cellLines.shift();
     const firstCell = firstLine.shift();
 
-    return <parsegraph dir={dir} type='s' scale={scale}><Cell dir='i' cell={firstCell}>
+    return <parsegraph dir={dir} type='s' scale={scale}><Cell subPath={subPath} dir='i' cell={firstCell}>
       {cellLines.reverse().reduce((cellChildren, cellLine, index)=>{
         return <parsegraph type='u' dir='d' shrink={index === 0}>
-            <CellLineContent cellLine={cellLine}/>
+            <CellLineContent subPath={subPath} cellLine={cellLine}/>
             {cellChildren}
           </parsegraph>
       }, null)}
-      <CellLineContent dir='f' cellLine={firstLine}/>
+      <CellLineContent subPath={subPath} dir='f' cellLine={firstLine}/>
       {children}
     </Cell>
     </parsegraph>
   }
-  return <parsegraph scale={scale} dir={dir} type='b' label={cell.val}>{children}</parsegraph>
+  return <parsegraph textSplice={cell.offset && cell.len ? {offset:cell.offset() - 1, len:cell.len(), subPath} : null} scale={scale} dir={dir} type='b' label={cell.val}>{children}</parsegraph>
 }
 
 const Page = ({name, content})=>{
@@ -107,7 +107,7 @@ const Page = ({name, content})=>{
   }
   return <parsegraph type='b' label={name}>
     <VMultislot dir='d' list={children.list} render={(child)=>{
-      return <Cell dir='f' cell={child}/>
+      return <Cell subPath={name} dir='f' cell={child}/>
     }}/>
   </parsegraph>
 }
