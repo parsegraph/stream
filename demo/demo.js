@@ -92,7 +92,7 @@ app.get(/^\/login\/?$/, async (req, res) => {
 
 app.get(/^\/demo\.js$/, async (req, res) => {
   const data = await gzip(
-    readFileSync(path.resolve(process.cwd() + `/../dist-prod/src/demo.js`))
+    readFileSync(path.resolve(process.cwd() + `/../dist/src/demo.js`))
   );
   res.setHeader("Content-Type", "application/javascript");
   res.setHeader("Content-Encoding", "gzip");
@@ -100,8 +100,8 @@ app.get(/^\/demo\.js$/, async (req, res) => {
 });
 
 app.use(root, express.static("../www"));
-app.use(root, express.static("../dist-prod/src"));
-app.use(root, express.static("../dist-prod"));
+app.use(root, express.static("../dist/src"));
+app.use(root, express.static("../dist"));
 
 app.get(/(.*)$/, async (req, res) => {
   res.sendFile(path.resolve(process.cwd() + "/../www/demo.html"));
