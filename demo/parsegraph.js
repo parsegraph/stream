@@ -127,7 +127,7 @@ module.exports = (app, contentRoot) => {
     resp.end();
   });
 
-  app.post(/\/splice\/?(.*)$/, bodyParser.json(), (req, resp) => {
+  app.post(/\/splice\/?(.*)$/, bodyParser.json(), async (req, resp) => {
     const subPath = req.url.substring("/splice/".length);
     try {
       const filePath = path.join(contentRoot, subPath);
@@ -142,8 +142,14 @@ module.exports = (app, contentRoot) => {
         filePath,
         str.slice(0, index) + (req.body.val || "") + str.slice(index + count)
       );
+
+      // Refresh servers and streams.
+      const mainPath = contentRoot;
+      if (servers[subPath]) {
+        servers[subPath] = await servePath(mainPath, subPath);
+        servers[subPath].setCallbackUrl("/callback/" + subPath);
+      }
       if (streams[subPath]) {
-        const mainPath = contentRoot;
         streams[subPath] = streamPath(mainPath, subPath);
         streams[subPath].setCallbackUrl("/callback/" + subPath);
       }

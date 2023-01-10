@@ -174,7 +174,17 @@ export default class ParsegraphStream {
     return null;
   }
 
+  _populated:{url: string, options: any};
+
+  repopulate() {
+    if (!this._populated) {
+      return;
+    }
+    this.populate(this._populated.url, this._populated.options);
+  }
+
   populate(url: string, options?: any) {
+    this._populated = {url, options};
     if (this.getOnPopulate()) {
       this.getOnPopulate()(this, url, options);
       return;
@@ -505,6 +515,7 @@ export default class ParsegraphStream {
     const commit = ()=>{
       origValue = c.value;
       returnToView();
+      this.repopulate();
     };
 
     let origValue = val;
