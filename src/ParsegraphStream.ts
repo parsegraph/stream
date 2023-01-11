@@ -100,7 +100,7 @@ export default class ParsegraphStream {
   _onLink: (url: string, options?: any) => void;
   _onStream: (stream: ParsegraphStream, url: string, options?: any) => void;
   _onPopulate: (stream: ParsegraphStream, url: string, options?: any) => void;
-  _onRoot: (node: PaintedNode)=>void;
+  _onRoot: (node: PaintedNode) => void;
 
   onPopulate(
     populator: (stream: ParsegraphStream, url: string, options?: any) => void
@@ -176,7 +176,7 @@ export default class ParsegraphStream {
     return null;
   }
 
-  _populated:{url: string, options: any};
+  _populated: { url: string; options: any };
 
   repopulate() {
     if (!this._populated) {
@@ -186,7 +186,7 @@ export default class ParsegraphStream {
   }
 
   populate(url: string, options?: any) {
-    this._populated = {url, options};
+    this._populated = { url, options };
     if (this.getOnPopulate()) {
       this.getOnPopulate()(this, url, options);
       return;
@@ -499,7 +499,11 @@ export default class ParsegraphStream {
 
   _splicer: Splicer;
 
-  private makeTextEdit(nodeId: number, val: string, callback: (newVal:string)=>Promise<any>) {
+  private makeTextEdit(
+    nodeId: number,
+    val: string,
+    callback: (newVal: string) => Promise<any>
+  ) {
     const n = this.getNode(nodeId);
     const block = n.value();
     block.setLabel(val);
@@ -508,13 +512,13 @@ export default class ParsegraphStream {
     c.style.pointerEvents = "all";
     c.value = val;
 
-    const returnToView = ()=>{
+    const returnToView = () => {
       n.setValue(block);
       block.setNode(n);
       this.viewport().scheduleRepaint();
-    }
+    };
 
-    const commit = ()=>{
+    const commit = () => {
       origValue = c.value;
       returnToView();
       this.repopulate();
@@ -525,10 +529,11 @@ export default class ParsegraphStream {
       if (e.key === "Enter") {
         // Commit
         e.preventDefault();
-        callback(c.value).then(()=>{
-          commit();
-        }).catch(()=>{
-        });
+        callback(c.value)
+          .then(() => {
+            commit();
+          })
+          .catch(() => {});
       } else if (e.key === "Escape") {
         // Cancel
         e.preventDefault();
@@ -538,7 +543,7 @@ export default class ParsegraphStream {
     });
     div.appendChild(c);
     const edit = new DOMContent(() => div);
-    edit.setOnScheduleUpdate(()=>this.viewport().scheduleRepaint());
+    edit.setOnScheduleUpdate(() => this.viewport().scheduleRepaint());
     edit.setArtist(domArtist);
 
     const install = () => {
@@ -554,8 +559,9 @@ export default class ParsegraphStream {
   }
 
   textEdit(nodeId: number, val: string, callbackId: number) {
-
-    return this.makeTextEdit(nodeId, val, (newVal)=>this.makeCallback(callbackId, newVal));
+    return this.makeTextEdit(nodeId, val, (newVal) =>
+      this.makeCallback(callbackId, newVal)
+    );
   }
 
   textSplice(
@@ -565,7 +571,9 @@ export default class ParsegraphStream {
     len: number,
     subPath: string
   ) {
-    return this.makeTextEdit(nodeId, val, (newVal)=>this.getSplicer()(newVal, offset, len, subPath));
+    return this.makeTextEdit(nodeId, val, (newVal) =>
+      this.getSplicer()(newVal, offset, len, subPath)
+    );
   }
 
   parseColor(val: string) {
@@ -702,7 +710,7 @@ export default class ParsegraphStream {
     }
   }
 
-  setOnRoot(onRoot:(root:PaintedNode)=>void) {
+  setOnRoot(onRoot: (root: PaintedNode) => void) {
     this._onRoot = onRoot;
   }
 
