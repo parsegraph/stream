@@ -2,6 +2,11 @@
 
 This is for Node projects:
 
+## Hosting a container
+
+    make build-container
+    docker run --net bridge --name raintest -e SITE_HOST=0.0.0.0 -e CONTENT_ROOT=/usr/src --expose 3000 -p=10.11.0.2:15000:3000/tcp localhost/parsegraph-stream:latest
+
 ## Setup
 
 1. Pick a new package name.
