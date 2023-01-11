@@ -65,6 +65,7 @@ module.exports = (app, contentRoot) => {
   app.get(/\/graph\/?(.*)$/, async (req, resp) => {
     resp.writeHead(200, {
       "Content-Type": "text/plain",
+      "Access-Control-Allow-Origin": "*",
     });
     const mainPath = contentRoot;
     const subPath = req.url.substring("/graph/".length);
