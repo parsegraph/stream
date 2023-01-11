@@ -4,7 +4,7 @@ if test $# -gt 0; then
     shift
 fi
 while true; do
-    make demo SITE_PORT=$SITE_PORT &
+    make demo SITE_PORT=$SITE_PORT SITE_HOST=$SITE_HOST &
     serverpid=$!
     trap 'kill -TERM $serverpid' TERM
     trap 'kill -TERM $serverpid; exit' INT

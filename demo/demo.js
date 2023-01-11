@@ -107,8 +107,7 @@ app.get(/(.*)$/, async (req, res) => {
   res.sendFile(path.resolve(process.cwd() + "/../www/demo.html"));
 });
 
-const host = "10.11.0.2";
-console.log("PORT: " + port);
+const host = process.env.SITE_HOST || "localhost";
 app.listen(port, host, 0, () => {
   if (typeof port === "number") {
     console.log(
