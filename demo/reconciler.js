@@ -160,9 +160,9 @@ const hostConfig = {
     }
     if (props.textSplice) {
       try {
-        const {offset, len, subPath} = props.textSplice
+        const { offset, len, subPath } = props.textSplice;
         caret.node().textSplice(props.label, offset, len, subPath);
-      } catch(ex) {
+      } catch (ex) {
         console.log(ex);
       }
     }

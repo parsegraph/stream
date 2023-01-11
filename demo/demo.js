@@ -8,12 +8,12 @@ const path = require("path");
 const { DIST_NAME } = require("../webpack.common");
 
 const getPort = (port) => {
-  if (statSync("../demo.port")) {
-    try {
+  try {
+    if (statSync("../demo.port")) {
       port = parseInt(readFileSync("../demo.port"));
-    } catch (ex) {
-      console.log(ex);
     }
+  } catch (ex) {
+    console.log(ex);
   }
   if (process.env.SITE_PORT) {
     try {
