@@ -237,25 +237,6 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     return;
   }
 
-  const parseType = async (parseType) => {
-    const parser = __dirname + `/../parser/${parseType}.jsx`;
-    const refresh = async () => {
-      try {
-        console.log("Reacting parsegraph");
-        await reactParsegraph(server, readFileSync(parser), fullPath, {
-          content: readFileSync(fullPath),
-          name: fullPath,
-        });
-      } catch (ex) {
-        console.log("Exception during parse", ex);
-      }
-    };
-    watch(parser, null, refresh);
-    watch(fullPath, null, refresh);
-    await refresh();
-    return;
-  };
-
   if (TS_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
     const car = server.state().newCaret("b");
 
@@ -289,6 +270,24 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     server.state().setRoot(car.root());
     return;
   }
+
+  const parseType = async (parseType) => {
+    const parser = __dirname + `/../parser/${parseType}.jsx`;
+    const refresh = async () => {
+      try {
+        await reactParsegraph(server, readFileSync(parser), fullPath, {
+          content: readFileSync(fullPath),
+          name: subPath,
+        });
+      } catch (ex) {
+        console.log("Exception during parse", ex);
+      }
+    };
+    watch(parser, null, refresh);
+    watch(fullPath, null, refresh);
+    await refresh();
+    return;
+  };
 
   if (fullPath.endsWith(".lisp") || fileType.includes("ASCII text")) {
     await parseType("lisp");
