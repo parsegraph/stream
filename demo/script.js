@@ -141,7 +141,6 @@ const reactParsegraph = async (server, content, fullPath, props) => {
       liveOffset: 1,
     }
   );
-  console.log("Module run");
   const mod = { exports: {} };
   func(
     mod.exports,
@@ -168,15 +167,11 @@ const reactParsegraph = async (server, content, fullPath, props) => {
 
 const renderReactParsegraph = (server, out, props) => {
   return new Promise((resolve) => {
-    console.log("Creating container");
     const container = Reconciler.createContainer(server, 0, false, null);
-    console.log("Updating container");
     const view = out(props);
-    console.log("Got JSX", view);
     Reconciler.updateContainer(view, container, null, () => {
       resolve();
     });
-    console.log("Updating container");
   });
 };
 
@@ -185,7 +180,6 @@ const buildStreamPath = async (server, mainPath, subPath) => {
   const fileType = spawnSync("/usr/bin/file", ["-b", fullPath])
     .stdout.toString()
     .trim();
-  console.log(fileType);
   if (fileType === "directory") {
     return servePath(mainPath, subPath);
   }
@@ -245,7 +239,6 @@ const buildStreamPath = async (server, mainPath, subPath) => {
       jsx: "preserve",
     });
     const ast = program.getSourceFile(fullPath);
-    console.log(ast);
 
     car.label("TypeScript");
     car.spawnMove("d", "b");
@@ -262,8 +255,6 @@ const buildStreamPath = async (server, mainPath, subPath) => {
         jsx: true,
       },
     });
-    console.log(ast);
-    ast.body.forEach((node) => console.log(node));
 
     car.label("Babel");
     car.spawnMove("d", "b");
@@ -327,7 +318,7 @@ const servePath = async (mainPath, subPath) => {
     try {
       stats = statSync(fullPath, { throwIfNoEntry: false });
     } catch (ex) {
-      console.log("statSync", fullPath, ex);
+      console.log("Exception during statSync", fullPath, ex);
       return;
     }
     if (!stats) {
