@@ -12,5 +12,6 @@ COPY ./parser ./parser/
 COPY Makefile .
 COPY Makefile.microproject .
 COPY webpack.common.js .
+RUN mkdir /content
 EXPOSE 3000
 CMD ["make", "demo"]
