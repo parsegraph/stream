@@ -7,7 +7,29 @@ the server based on graph interaction.
 This module allows live updates from a Parsegraph server to multiple connected
 clients.
 
+It also contains a server used to stream Parsegraph server events.
+
+## The problem
+
+Parsegraph applications can be written solely on the client, with callbacks
+embedded in the application. However, it becomes challenging to add sharing of
+the Parsegraph environment to other users, because updates to the graph must be
+maintained.
+
+Parsegraph stream inverts this problem by making all graph updates come from
+the server. It provides means to add callbacks to the graph, completing a
+round-trip of serving an initial graph, letting the user invoke graph actions,
+and sending graph updates back to the client once the callback is complete.
+
+## How to use
+
+Run a server, either locally or within a container, and navigate to /. You
+should see a Parsegraph client. This will show the Parsegraph for the content
+root. The content root is set by the CONTENT_ROOT environment variable.
+
 ## Hosting a container
+
+The container will run the demo server.
 
     make build-container
     docker run --net bridge --name parsegraph -e SITE_HOST=0.0.0.0 -e CONTENT_ROOT=/usr/src --expose 3000 -p=127.0.0.1:15000:3000/tcp localhost/parsegraph-stream:latest
