@@ -167,11 +167,13 @@ const reactParsegraph = async (server, content, fullPath, props) => {
 
 const renderReactParsegraph = (server, out, props) => {
   return new Promise((resolve) => {
-    const container = Reconciler.createContainer(server, 0, false, null);
+    //const container = Reconciler.createContainer(server, 0, false, null);
     const view = out(props);
-    Reconciler.updateContainer(view, container, null, () => {
+    console.log(view);
+    resolve();
+    /*Reconciler.updateContainer(view, container, null, () => {
       resolve();
-    });
+    });*/
   });
 };
 
