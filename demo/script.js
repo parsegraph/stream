@@ -296,7 +296,6 @@ const buildStreamPath = async (server, mainPath, subPath) => {
   }
 
   if (fileType.includes("ASCII text")) {
-    console.log("Parsing as ASCII text");
     await parseType("ascii-text");
     return;
   }
