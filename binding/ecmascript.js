@@ -207,7 +207,6 @@ class ECMACellNode extends TreeNode {
   renderNewExpression(val) {
     const car = new ParsegraphCaret(this.server(), "s", this.palette());
     car.label("new");
-    console.log(val);
     car.connect("i", this.renderNode(val.callee));
     car.spawnMove("d", "s");
     val.arguments.forEach((arg, i) => {
@@ -256,7 +255,6 @@ class ECMAScriptGraph extends TreeNode {
     if (this._oldText !== this._text) {
       this._tree.clear();
       const value = parseScript(this._text);
-      console.log(value);
       this.graph(this._tree, value);
       this._oldText = this._text;
     }
