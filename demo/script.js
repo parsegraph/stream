@@ -169,7 +169,6 @@ const renderReactParsegraph = (server, out, props) => {
   return new Promise((resolve) => {
     //const container = Reconciler.createContainer(server, 0, false, null);
     const view = out(props);
-    console.log(view);
     resolve();
     /*Reconciler.updateContainer(view, container, null, () => {
       resolve();
@@ -210,8 +209,12 @@ const buildStreamPath = async (server, mainPath, subPath) => {
         console.log(ex);
       }
     };
-    watch(fullPath, null, refresh);
-    await refresh();
+    try {
+      watch(fullPath, null, refresh);
+      await refresh();
+    } catch(ex) {
+      console.log(ex);
+    }
     return;
   }
 
@@ -276,8 +279,8 @@ const buildStreamPath = async (server, mainPath, subPath) => {
         console.log("Exception during parse", ex);
       }
     };
-    watch(parser, null, refresh);
-    watch(fullPath, null, refresh);
+    //watch(parser, null, refresh);
+    //watch(fullPath, null, refresh);
     await refresh();
     return;
   };
