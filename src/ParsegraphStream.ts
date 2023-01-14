@@ -75,6 +75,7 @@ export class ParsegraphInclude {
 
   setRoot(node: BlockNode) {
     const p = this.parentNode();
+    node.crease();
     p.connectNode(this._dir, node);
     this.scheduleUpdate();
   }
