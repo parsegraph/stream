@@ -280,7 +280,12 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     return;
   };
 
-  if (fullPath.endsWith(".lisp") || fileType.includes("ASCII text")) {
+  if (JS_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
+    await parseType("js");
+    return;
+  }
+
+  if (fullPath.endsWith(".lisp")) {
     await parseType("lisp");
     return;
   }
