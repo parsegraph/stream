@@ -9,6 +9,51 @@ const { readFileSync, writeFileSync } = require("fs")
 
 const net = require("net")
 
+class ServerSerializer {
+  constructor(contentRoot) {
+    this._contentRoot = contentRoot;
+    this._servers = {};
+    this._streams = {};
+  }
+
+  lock(cb) {
+    const p = new Promise(async ()=>{
+      await cb();
+    });
+    if (this._lock) {
+      this._lock.then(p);
+    } else {
+      this._lock = p;
+    }
+  }
+
+  async servePath(subPath) {
+    if (!this._servers[subPath]) {
+      try {
+        this._servers[subPath] = await servePath(this._contentRoot, subPath);
+      } catch (ex) {
+        console.log("Exception serving path: ", ex);
+        return;
+      }
+    }
+    return this._servers[subPath];
+  }
+
+  async streamPath(subPath) {
+    if (!this._streams[subPath]) {
+      const stream = await streamPath(this._contentRoot, subPath)
+      stream.setCallbackUrl(subPath)
+      this._streams[subPath] = stream
+    }
+    return this._streams[subPath];
+  }
+
+  async callback(subPath, callbackId, val) {
+    const stream = await this.streamPath(subPath);
+    stream.callback(callbackId, val)
+  }
+}
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -35,10 +80,15 @@ const createWindow = () => {
     console.log(ex);
   }
 
-  const streamRoot = process.env.SITE_ROOT || process.cwd()
+  console.log(process.argv);
+  console.log(`SITE_ROOT=${process.env.SITE_ROOT}`);
+  const streamRoot = (process.env.SITE_ROOT || process.argv[2]) || process.cwd()
+  console.log(`streamRoot is ${streamRoot}`);
+  const serializer = new ServerSerializer(streamRoot);
 
   ipcMain.on('parsegraph-splice', (_, text, index, count, subPath)=>{
     try {
+      console.log("Splicing ", subPath);
       const filePath = path.join(streamRoot, subPath);
       const str = readFileSync(filePath).toString();
       if (isNaN(index) || isNaN(count)) {
@@ -54,44 +104,42 @@ const createWindow = () => {
     }
   })
 
-  const streams = {}
-  ipcMain.on('parsegraph-callback', (_, callbackUrl, callbackId, val)=>{
-    const stream = streams[callbackUrl]
-    if (!stream) {
-      console.log("Unhandled callback", callbackUrl)
-      return;
+  ipcMain.on('parsegraph-callback', async (_, callbackUrl, callbackId, val)=>{
+    try {
+      await serializer.callback(callbackUrl, callbackId, val);
+    } catch(ex) {
+      console.log("Callback exception", ex);
     }
-    stream.callback(callbackId, val)
   })
 
   ipcMain.on('parsegraph-start', async (_, url)=>{
     console.log("START ", url)
-    const stream = await servePath(streamRoot, url)
-    stream.setCallbackUrl(url)
-    stream.connect((...args)=>{
-      //console.log("Parsegraph stream", ...args)
-      mainWindow.webContents.send('parsegraph', url, ...args)
-    });
+    try {
+      const stream = await serializer.servePath(url)
+      stream.setCallbackUrl(url)
+      stream.connect((...args)=>{
+        //console.log("Parsegraph stream", ...args)
+        mainWindow.webContents.send('parsegraph', url, ...args)
+      });
+    } catch(ex) {
+      console.log("Error starting server", ex);
+    }
   })
 
   ipcMain.on('parsegraph-stream', async (_, url)=>{
     console.log("CONNECTED TO", url)
-    const stream = await streamPath(streamRoot, url)
-    stream.setCallbackUrl(url)
-    streams[url] = stream
-    stream.connect((...args)=>{
+    const server = await serializer.streamPath(url);
+    server.connect((...args)=>{
       mainWindow.webContents.send('parsegraph-stream-event', url, ...args)
     });
   })
 
-  const servers = {};
   ipcMain.on('parsegraph-populate', async (_, url)=>{
-    if (!servers[url]) {
-      servers[url] = await servePath(streamRoot, subPath);
-    }
-    const server = servers[url]
-    server.forEach((...args)=>{
-      mainWindow.webContents.send('parsegraph-populate-event', url, ...args)
+    serializer.lock(async ()=>{
+      const server = await serializer.servePath(url);
+      server.forEach((...args)=>{
+        mainWindow.webContents.send('parsegraph-populate-event', url, ...args)
+      });
     });
   })
 }
