@@ -78,7 +78,7 @@ const makeTree = (server, mainPath, subPath) => {
   car.spawnMove("d", "u");
   car.push();
   paths.forEach((path) => {
-    if (++len > Math.sqrt(paths.length)) {
+    if (++len > 2 * Math.sqrt(paths.length)) {
       len = 0;
       car.pop();
       car.spawnMove("d", "u");
