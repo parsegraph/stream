@@ -4,12 +4,12 @@ if test $# -gt 0; then
     shift
 fi
 while true; do
-    make demo SITE_PORT=$SITE_PORT SITE_HOST=$SITE_HOST &
+    make demo SITE_PORT=$SITE_PORT &
     serverpid=$!
     trap 'kill -TERM $serverpid' TERM
     trap 'kill -TERM $serverpid; exit' INT
     sleep 0.2
-    inotifywait -e modify -r demo binding
+    inotifywait -e modify -r demo/package.json demo/yarn.lock demo/src
     kill -TERM $serverpid
     sleep 0.2
 done
