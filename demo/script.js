@@ -1,4 +1,4 @@
-const { readdirSync, fstat, readFile } = require("fs");
+const { readdir, readFile } = require("fs/promises");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const {
@@ -26,7 +26,7 @@ const makeTimer = (server) => {
   server.state().setRoot(car.root());
 };
 
-const { lstatSync, statSync, readFileSync, watch } = require("fs");
+const { lstatSync, statSync, watch } = require("fs");
 const { join } = require("path");
 const ts = require("typescript");
 
@@ -54,7 +54,7 @@ const serveFile = (server, mainPath, subPath) => {
   return car.root();
 };
 
-const makeTree = (server, mainPath, subPath) => {
+const makeTree = async(server, mainPath, subPath) => {
   const car = server.state().newCaret("u");
   const fullPath = join(mainPath, subPath);
   if (!subPath.endsWith("/")) {
@@ -65,9 +65,9 @@ const makeTree = (server, mainPath, subPath) => {
   car.label(subPath);
   const paths = [];
   try {
-    readdirSync(fullPath, {
+    (await readdir(fullPath, {
       withFileTypes: true,
-    }).forEach((e) => {
+    })).forEach((e) => {
       paths.push(e.name);
     });
   } catch (ex) {
@@ -204,7 +204,8 @@ const buildStreamPath = async (server, mainPath, subPath) => {
   ) {
     const refresh = async () => {
       try {
-        await reactParsegraph(server, readFileSync(fullPath), fullPath);
+        const fileContents = await readFile(fullPath);
+        await reactParsegraph(server, fileContents, fullPath);
       } catch (ex) {
         console.log(ex);
       }
@@ -220,7 +221,8 @@ const buildStreamPath = async (server, mainPath, subPath) => {
 
   if (fullPath.endsWith(".yml") || fileType.includes("YAML")) {
     const graph = new YAMLGraph(server);
-    graph.parse(readFileSync(fullPath).toString(), subPath);
+    const fileContents = await readFile(fullPath);
+    graph.parse(fileContents.toString(), subPath);
     server.state().setRoot(graph.root());
     return;
   }
@@ -231,7 +233,8 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     fileType.includes("XML 1.0 document")
   ) {
     const graph = new XMLGraph(server);
-    graph.parse(readFileSync(fullPath).toString(), subPath);
+    const fileContents = await readFile(fullPath);
+    graph.parse(fileContents.toString(), subPath);
     server.state().setRoot(graph.root());
     return;
   }
@@ -253,7 +256,8 @@ const buildStreamPath = async (server, mainPath, subPath) => {
 
   if (JS_EXTENSIONS.some((ext) => fullPath.endsWith(ext))) {
     const car = server.state().newCaret("b");
-    const ast = require("espree").parse(readFileSync(fullPath), {
+    const fileContents = await readFile(fullPath);
+    const ast = require("espree").parse(fileContents, {
       ecmaVersion: "latest",
       sourceType: "module",
       ecmaFeatures: {
@@ -271,8 +275,10 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     const parser = __dirname + `/../parser/${parseType}.jsx`;
     const refresh = async () => {
       try {
-        await reactParsegraph(server, readFileSync(parser), fullPath, {
-          content: readFileSync(fullPath),
+        const parserSource = await readFile(parser);
+        const fileContents = await readFile(fullPath);
+        await reactParsegraph(server, parserSource, fullPath, {
+          content: fileContents,
           name: subPath,
         });
       } catch (ex) {
@@ -340,7 +346,7 @@ const servePath = async (mainPath, subPath) => {
       return;
     }
     if (stats.isDirectory()) {
-      server.state().setRoot(makeTree(server, mainPath, subPath));
+      server.state().setRoot(await makeTree(server, mainPath, subPath));
     } else {
       //server.state().setRoot(serveFile(server, mainPath, subPath));
       await buildStreamPath(server, mainPath, subPath);
