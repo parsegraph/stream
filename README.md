@@ -32,7 +32,7 @@ root. The content root is set by the CONTENT_ROOT environment variable.
 The container will run the demo server.
 
     make build-container
-    docker run --net bridge --name parsegraph -e SITE_HOST=0.0.0.0 -e CONTENT_ROOT=/usr/src --expose 3000 -p=127.0.0.1:15000:3000/tcp localhost/parsegraph-stream:latest
+    docker run -d --net bridge --name parsegraph -e SITE_HOST=0.0.0.0 -e CONTENT_ROOT=/usr/src --expose 3000 -p=127.0.0.1:15000:3000/tcp localhost/parsegraph-stream:latest
 
 # interface ParsegraphServer
 
