@@ -4,6 +4,7 @@
   "description": "parsegraph microproject server",
   "main": "demo.js",
   "scripts": {
+    "build": "npx tsc src/demo.ts --outFile ./demo.js",
     "start": "node demo.js"
   },
   "repository": {
@@ -18,8 +19,6 @@
   "homepage": "https://github.com/parsegraph/microproject#readme",
   "dependencies": {
     "express": "^4.17.2",
-    "glob": "^7.2.0",
-    "needle": "^3.1.0",
-    "node-gzip": "^1.1.2"
+    "glob": "^7.2.0"
   }
 }
