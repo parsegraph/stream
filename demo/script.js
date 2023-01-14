@@ -285,6 +285,12 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     return;
   }
 
+  if (fileType.includes("ASCII text")) {
+    console.log("Parsing as ASCII text");
+    await parseType("ascii-text");
+    return;
+  }
+
   if (fullPath.endsWith(".json") || fileType.includes("JSON")) {
     await parseType("json");
     return;
