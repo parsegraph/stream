@@ -2,7 +2,6 @@ const glob = require("glob");
 const express = require("express");
 const app = express();
 const { writeFileSync, readFileSync, statSync } = require("fs");
-const process = require("process");
 const path = require("path");
 
 const { DIST_NAME } = require("../webpack.common");
