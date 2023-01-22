@@ -1,17 +1,10 @@
 FROM node:16
 
-WORKDIR /usr/src
-COPY node_modules/ ./node_modules/
-COPY ./dist ./dist/
-COPY ./www ./www/
-COPY ./demo ./demo/
-COPY ./package.json .
-COPY ./yarn.lock .
-COPY ./binding ./binding/
-COPY ./parser ./parser/
-COPY Makefile .
-COPY Makefile.microproject .
-COPY webpack.common.js .
-RUN mkdir /content
+COPY node_modules/ /usr/src/node_modules/
+COPY ./dist /usr/src/dist/
+COPY ./www /usr/src/www/
+COPY ./demo /usr/src/demo/
+COPY ./package.json /usr/src/
+COPY ./yarn.lock /usr/src/
 EXPOSE 3000
 CMD ["make", "demo"]
