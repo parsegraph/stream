@@ -4899,9 +4899,9 @@ parsegraph-size@^1.7.2:
   integrity sha512-2cCr4M4lP+G/N9+JGW7DQXIH08Bk8ySmoH/XOOgJg3Dhk+l1BcR/xNiVRcF5UY+5X/b5nWYoKfQ7wQxACl0fRA==
 
 parsegraph-smoothstep@^1.4.6:
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/parsegraph-smoothstep/-/parsegraph-smoothstep-1.4.6.tgz#97c3cf75ddc246f5c2e0ac01d69f1ed06fcca71b"
-  integrity sha512-eJsNZVEoXg7nT0zbaKdV9CXnX1wTaziVjyfsJcv4XB8F+d0jrEnuiGjUP86K66rcJf9GXv26vbMcuGtCYGGmEA==
+  version "1.4.7"
+  resolved "https://registry.yarnpkg.com/parsegraph-smoothstep/-/parsegraph-smoothstep-1.4.7.tgz#5e843ec409c93471d941a8e9d31e4d754be142b3"
+  integrity sha512-4nmr0076aS07jrqzJkIEHEyv69P5UF/VVQo4xcj7UjpwhQyZJHNPYeX270D6kTpsiDH+IpogtMW0z83eppUmdg==
 
 parsegraph-spotlightpainter@^2.3.14:
   version "2.3.14"
