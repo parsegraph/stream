@@ -54,7 +54,7 @@ const serveFile = (server, mainPath, subPath) => {
   return car.root();
 };
 
-const makeTree = async(server, mainPath, subPath) => {
+const makeTree = async (server, mainPath, subPath) => {
   const car = server.state().newCaret("u");
   const fullPath = join(mainPath, subPath);
   if (!subPath.endsWith("/")) {
@@ -65,9 +65,11 @@ const makeTree = async(server, mainPath, subPath) => {
   car.label(subPath);
   const paths = [];
   try {
-    (await readdir(fullPath, {
-      withFileTypes: true,
-    })).forEach((e) => {
+    (
+      await readdir(fullPath, {
+        withFileTypes: true,
+      })
+    ).forEach((e) => {
       paths.push(e.name);
     });
   } catch (ex) {
@@ -213,7 +215,7 @@ const buildStreamPath = async (server, mainPath, subPath) => {
     try {
       watch(fullPath, null, refresh);
       await refresh();
-    } catch(ex) {
+    } catch (ex) {
       console.log(ex);
     }
     return;
