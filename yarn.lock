@@ -4917,12 +4917,12 @@ parsegraph-smoothstep@^1.4.8:
   integrity sha512-3BWmy2Dopv5VUjeMv24RVSvEHzzfKJNV5sQuU1ios18pOXfFQhnhXVC62hi1MHm48619k0gMMyl0GPZsyV91nw==
 
 parsegraph-spotlightpainter@^2.3.16:
-  version "2.3.16"
-  resolved "https://registry.yarnpkg.com/parsegraph-spotlightpainter/-/parsegraph-spotlightpainter-2.3.16.tgz#7492c4be3431509837c746290d8e3ae60ef248de"
-  integrity sha512-o5TbuA9LGvcBMMzD19mXysSfCIQuCFpTBES7aJvW9X71jhyjXor1RymHgK5vIAef6K3D5/p+c+yWvqh8SI7GFQ==
+  version "2.3.17"
+  resolved "https://registry.yarnpkg.com/parsegraph-spotlightpainter/-/parsegraph-spotlightpainter-2.3.17.tgz#fb3943661eff939d86c1fa69e5d2ee48cb0d9020"
+  integrity sha512-I63atMDTJbYZJJ+gzrTrnaiCK6jrVXx00rZawNafBc5gAMCJXh0GtQ2nDiJ1KoA3v1Gy23SN4Hm25fqN3Zv3nQ==
   dependencies:
     parsegraph-color "^1.4.12"
-    parsegraph-compileprogram "^2.2.20"
+    parsegraph-compileprogram "^2.2.21"
     parsegraph-matrix "^1.4.15"
     parsegraph-pagingbuffer "^2.1.7"
 
