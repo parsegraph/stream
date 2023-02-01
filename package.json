@@ -43,7 +43,7 @@
     "jsdom-global": "^3.0.2",
     "parsegraph-checkglerror": "^1.5.8",
     "parsegraph-log": "^1.9.3",
-    "parsegraph-viewport": "^2.9.14",
+    "parsegraph-viewport": "^2.9.15",
     "prettier": "^2.8.3",
     "raw-loader": "^4.0.2",
     "source-map-loader": "^4.0.1",
